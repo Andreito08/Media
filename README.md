@@ -2,6 +2,8 @@
 
 > PWA offline-first per gestire voti, medie e grafici per ogni materia, dalla primaria all'università.
 
+**Demo live:** https://andreito08.github.io/Media/
+
 <p align="center">
   Voti italiani smart, medie pesate a due decimali, grafici di andamento e backup JSON.
   Si installa su Android e iPhone senza store e funziona anche senza connessione.

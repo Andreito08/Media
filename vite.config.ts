@@ -4,7 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
 
 // PWA: installabile su Android + iOS senza store, funziona offline (anti-perdita dati in classe)
+// base '/Media/' = URL di GitHub Pages (https://andreito08.github.io/Media/)
 export default defineConfig({
+  base: '/Media/',
   plugins: [
     react(),
     tailwindcss(),
