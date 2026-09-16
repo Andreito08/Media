@@ -1,0 +1,545 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+:root {
+  --acc: #2563eb;
+  --acc-deep: #16294d;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  background: #e9edf6;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.dark body {
+  background: #0b1220;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.3);
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+/* ============ Liquid Glass wallpaper (toni blu) ============ */
+.glass-wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f2f4fb 0%, #e7ebf5 100%);
+}
+
+.dark .glass-wallpaper {
+  background: linear-gradient(180deg, #0b1220 0%, #0e1930 100%);
+}
+
+.glass-wallpaper span {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: blob-drift 34s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.dark .glass-wallpaper span {
+  opacity: 0.3;
+}
+
+.glass-wallpaper span:nth-child(1) {
+  width: 55vmax;
+  height: 55vmax;
+  left: -15vmax;
+  top: -18vmax;
+  background: #93c5fd;
+}
+
+.glass-wallpaper span:nth-child(2) {
+  width: 48vmax;
+  height: 48vmax;
+  right: -14vmax;
+  top: 8vh;
+  background: #67e8f9;
+  animation-delay: -6s;
+}
+
+.glass-wallpaper span:nth-child(3) {
+  width: 52vmax;
+  height: 52vmax;
+  left: 12vw;
+  bottom: -22vmax;
+  background: #7dd3fc;
+  animation-delay: -12s;
+}
+
+.glass-wallpaper span:nth-child(4) {
+  width: 30vmax;
+  height: 30vmax;
+  right: 8vw;
+  bottom: 6vh;
+  background: #bae6fd;
+  animation-delay: -17s;
+  opacity: 0.5;
+}
+
+@keyframes blob-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(2.5vmax, 2vmax) scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-wallpaper span {
+    animation: none;
+  }
+  .animate-fade-up,
+  .animate-pop-in {
+    animation: none;
+  }
+  [data-glow].is-pressed .glow-switch {
+    animation: none;
+  }
+}
+
+/* ============ Glass surfaces ============ */
+.glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.28));
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 12px 40px -12px rgba(31, 38, 135, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.dark .glass {
+  background: linear-gradient(135deg, rgba(30, 45, 75, 0.72), rgba(20, 32, 58, 0.55));
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 12px 40px -12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-dark {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--acc-deep) 74%, transparent),
+    color-mix(in srgb, var(--acc) 62%, transparent)
+  );
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 20px 55px -18px rgba(10, 25, 60, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-emerald {
+  background: linear-gradient(135deg, rgba(4, 60, 54, 0.62), rgba(30, 90, 110, 0.55));
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 20px 55px -18px rgba(4, 60, 60, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Riflesso speculare in alto a sinistra, come il vetro Apple */
+.glass-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.38) 0%,
+    rgba(255, 255, 255, 0.1) 22%,
+    transparent 42%
+  );
+}
+
+/* Chip accento (segue il tema scelto) */
+.acc-chip {
+  background: linear-gradient(135deg, var(--acc-deep), var(--acc));
+  color: #fff;
+  box-shadow:
+    0 8px 20px -8px color-mix(in srgb, var(--acc) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ============ Glass buttons ============ */
+.btn-liquid-primary {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--acc-deep) 90%, transparent),
+    color-mix(in srgb, var(--acc) 90%, transparent)
+  );
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  backdrop-filter: blur(14px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 10px 26px -8px color-mix(in srgb, var(--acc) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.12);
+  color: #fff;
+}
+
+.btn-liquid-primary:hover {
+  filter: brightness(1.12);
+}
+
+.btn-liquid-soft {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.4));
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 6px 18px -8px rgba(31, 38, 135, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: #1e3a5f;
+}
+
+.dark .btn-liquid-soft {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07));
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #dbeafe;
+}
+
+.btn-liquid-soft:hover {
+  filter: brightness(1.06);
+}
+
+.btn-liquid-ghost {
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: #475569;
+}
+
+.dark .btn-liquid-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #cbd5e1;
+}
+
+.btn-liquid-ghost:hover {
+  filter: brightness(1.08);
+}
+
+/* ============ Glass inputs ============ */
+.input-liquid {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 2px 6px rgba(15, 36, 64, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  color: #1e293b;
+}
+
+.dark .input-liquid {
+  background: rgba(10, 20, 38, 0.55);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: #e2e8f0;
+}
+
+.dark .input-liquid::placeholder {
+  color: #64748b;
+}
+
+.input-liquid:focus {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: color-mix(in srgb, var(--acc) 75%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--acc) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  outline: none;
+}
+
+.dark .input-liquid:focus {
+  background: rgba(10, 20, 38, 0.85);
+}
+
+/* Transizione morbida quando si cambia tema / dark mode
+   (solo proprietà economiche: niente ombre, che scattano) */
+.glass,
+.glass-dark,
+.glass-emerald,
+.btn-liquid-primary,
+.btn-liquid-soft,
+.btn-liquid-ghost,
+.input-liquid,
+body {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--acc) 70%, transparent);
+  outline-offset: 2px;
+}
+
+/* Entrata scaglionata per le liste (voti, righe, chip) */
+.stagger > * {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 45ms; }
+.stagger > *:nth-child(3) { animation-delay: 90ms; }
+.stagger > *:nth-child(4) { animation-delay: 135ms; }
+.stagger > *:nth-child(5) { animation-delay: 180ms; }
+.stagger > *:nth-child(6) { animation-delay: 225ms; }
+.stagger > *:nth-child(7) { animation-delay: 270ms; }
+.stagger > *:nth-child(8) { animation-delay: 315ms; }
+.stagger > *:nth-child(9) { animation-delay: 360ms; }
+.stagger > *:nth-child(n + 10) { animation-delay: 400ms; }
+
+/* ============ iOS touch fx: glow + ingrandimento + rimbalzo ============ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+button {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
+}
+
+/* Bottone premuto: più grosso e luminoso (al posto del grigio di sistema) */
+button.is-pressed {
+  transform: scale(1.05);
+  filter: brightness(1.07);
+}
+
+/* Niente ingrandimento dove lo spazio è stretto (es. tab in alto):
+   resta solo la retroilluminazione, così nulla si taglia o si sposta */
+button.no-grow.is-pressed,
+button.no-grow:active {
+  transform: none;
+}
+
+/* Retroilluminazione nel punto esatto del dito + velo uniforme su tutto il riquadro */
+button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background:
+    radial-gradient(
+      circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0) 70%
+    ),
+    rgba(255, 255, 255, 0.16);
+}
+
+button.is-pressed::after,
+button:active::after {
+  opacity: 1;
+}
+
+/* Righe non-bottone con retroilluminazione a tutto campo (es. interruttore copia materie):
+   si illumina la riga, a crescere è solo l'interruttore */
+[data-glow] {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-glow]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background:
+    radial-gradient(
+      circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0) 70%
+    ),
+    rgba(255, 255, 255, 0.16);
+}
+
+[data-glow].is-pressed::after {
+  opacity: 1;
+}
+
+[data-glow] .glow-switch {
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
+}
+
+[data-glow].is-pressed .glow-switch {
+  transform: scale(1.12);
+  filter: brightness(1.1);
+  animation: switch-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Al tocco: balzo visibile e ritorno; da tenuto premuto resta sobrio (1.12) */
+@keyframes switch-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+    filter: brightness(1.2);
+  }
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+/* contenitore che si allunga e rimbalza ai bordi (pagina o pannello modale) */
+.bounce-back {
+  transition: transform 0.55s cubic-bezier(0.2, 1.35, 0.32, 1);
+}
+
+/* Pannello scorrevole del modale: deve vincere su .glass-sheen (overflow hidden).
+   Regola non-layered e dichiarata dopo, a pari specificità. */
+.modal-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+/* ============ legacy helpers ============ */
+.app-bg {
+  background: transparent;
+}
+
+.card {
+  border-radius: 1.75rem;
+}
+
+.press {
+  transition:
+    transform 0.12s ease,
+    background 0.2s ease,
+    filter 0.2s ease;
+}
+
+.press:active {
+  transform: scale(1.05);
+  filter: brightness(1.07);
+}
+
+/* Variante con ingrandimento ben visibile alla pressione (es. X chiusura
+   impostazioni): cresce tutto il pulsante, cerchio esterno + icona dentro. */
+button.press-grow.is-pressed,
+button.press-grow:active {
+  transform: scale(1.22);
+  filter: brightness(1.12);
+}
+
+.lift {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
+}
+
+.lift:hover {
+  transform: translateY(-2px);
+}
+
+/* ============ motion ============ */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.animate-pop-in {
+  animation: pop-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* ============ scrollbars ============ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 196, 0.6) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 196, 0.6);
+  border-radius: 99px;
+}
