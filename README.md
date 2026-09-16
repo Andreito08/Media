@@ -1,4 +1,4 @@
-# Medie Scolastiche
+# Media
 
 > PWA offline-first per gestire voti, medie e grafici per ogni materia, dalla primaria all'università.
 
@@ -13,7 +13,7 @@
 
 ## Panoramica
 
-**Medie** è un'app web in italiano per studenti:
+**Media** è un'app web in italiano per studenti:
 
 - **Onboarding guidato** — nome, grado (primaria, secondaria di I grado, superiori, università), indirizzo di studio, tipo di periodo (trimestre/pentamestre, quadrimestre, anno unico) e valore di `+` / `-`.
 - **Materie automatiche** — catalogo pronto per medie, elementari e 12 indirizzi delle superiori (classico, scientifico, linguistico, informatica, AFM, turismo e altri), più materie custom.
@@ -35,7 +35,7 @@ Tutto resta sul dispositivo: nessun account, nessun server.
 | **Scala +/- configurabile** | Quanto vale `+` e `-` (default `0,25`), modificabile dal profilo |
 | **Pesi** | Ogni voto ha un peso `1-300` (`100` = normale) per verifiche che contano di più |
 | **Tipi e periodi** | Tipo `orale / scritto / pratico / verifica`, periodo `primo / secondo` mappato su trimestre, pentamestre o quadrimestre |
-| **Medie** | Pesata per materia + generale, formattazione `—` se senza voti, colori per fascia (sotto `6` in rosso) |
+| **Medie di materia e generale** | Pesata per materia + generale, formattazione `—` se senza voti, colori per fascia (sotto `6` in rosso) |
 | **Obiettivo** | Calcolo del voto necessario al prossimo voto (peso 100) per arrivare a una media target |
 | **Materie** | Aggiunta, rinomina, nascondi (esclusa dalla generale), elimina con i suoi voti |
 | **Anni** | Crea anno, cambia anno attivo, copia materie dell'anno precedente |

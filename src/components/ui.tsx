@@ -265,7 +265,7 @@ export function Onboarding() {
               M
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight">Medie Scolastiche</h1>
+              <h1 className="text-2xl font-black tracking-tight">Media</h1>
               <p className="text-sm text-sky-100/90">Voti, medie a due decimali e grafici. Offline, sui tuoi dispositivi.</p>
             </div>
           </div>

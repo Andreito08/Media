@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icon-maskable-512.png'],
       manifest: {
-        name: 'Medie Scolastiche',
-        short_name: 'Medie',
+        name: 'Media',
+        short_name: 'Media',
         description: 'Gestisci voti, medie e grafici per ogni materia',
         lang: 'it',
         theme_color: '#1e3a5f',

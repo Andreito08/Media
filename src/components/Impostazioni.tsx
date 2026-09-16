@@ -22,7 +22,7 @@ export function SezioneImpostazioni() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `medie-backup-${anno?.label.replace('/', '-') ?? 'anno'}-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `media-backup-${anno?.label.replace('/', '-') ?? 'anno'}-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
       setMsg('Backup scaricato. Conservalo (Drive, email, chat): con quel file recuperi tutto.');
@@ -53,7 +53,7 @@ export function SezioneImpostazioni() {
       body{font-family:Arial,sans-serif;padding:32px;color:#111} table{width:100%;border-collapse:collapse;margin-top:16px}
       td,th{border:1px solid #ccc;padding:8px;text-align:left} h1{color:#1e3a5f}
     </style></head><body>
-      <h1>Medie scolastiche — ${profile?.nome ?? ''} (${anno?.label ?? ''})</h1>
+      <h1>Media — ${profile?.nome ?? ''} (${anno?.label ?? ''})</h1>
       <p>${profile?.indirizzoNome ?? ''} · Media generale: <b>${formatMedia(gen)}</b> · Generato il ${new Date().toLocaleDateString('it-IT')}</p>
       <table><tr><th>Materia</th><th>Voti</th><th>Media</th></tr>
       ${righe.map((r) => `<tr><td>${r.nome}</td><td>${r.n}</td><td>${formatMedia(r.media)}</td></tr>`).join('')}
