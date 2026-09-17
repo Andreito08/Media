@@ -16,11 +16,17 @@ const gridLight = 'rgba(100, 116, 139, 0.12)';
 const gridDark = 'rgba(148, 163, 184, 0.16)';
 const tickColor = '#94a3b8';
 
-function makeOpts(grid: string) {
+/** Telefono / touch / reduced-motion: niente animazioni canvas (PC invariato). */
+function graficaLeggera(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce)').matches;
+}
+
+function makeOpts(grid: string, animate: boolean) {
   return {
     responsive: true,
     maintainAspectRatio: false as const,
-    animation: { duration: 750, easing: 'easeOutQuart' as const },
+    animation: animate ? { duration: 750, easing: 'easeOutQuart' as const } : (false as const),
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -52,6 +58,7 @@ function areaFill(top: string, bottom: string) {
 /** Anello SVG della media generale (numero con count-up) */
 function Gauge({ value, acc }: { value: number | null; acc: string }) {
   const animata = useCountUp(value);
+  const leggera = useMemo(() => graficaLeggera(), []);
   const r = 54;
   const c = 2 * Math.PI * r;
   const pct = animata === null ? 0 : Math.min(100, Math.max(0, (animata / 10) * 100));
@@ -63,7 +70,7 @@ function Gauge({ value, acc }: { value: number | null; acc: string }) {
         <circle
           cx="64" cy="64" r={r} fill="none" stroke={col} strokeWidth="11" strokeLinecap="round"
           strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100}
-          style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1), stroke 0.3s' }}
+          style={leggera ? undefined : { transition: 'stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1), stroke 0.3s' }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -77,7 +84,8 @@ function Gauge({ value, acc }: { value: number | null; acc: string }) {
 export function Dashboard() {
   const { materie, voti, profile, prefs } = useStore();
   const T = THEMES[prefs.tema] ?? THEMES.blu;
-  const opts = useMemo(() => makeOpts(prefs.dark ? gridDark : gridLight), [prefs.dark]);
+  const animare = useMemo(() => !graficaLeggera(), []);
+  const opts = useMemo(() => makeOpts(prefs.dark ? gridDark : gridLight, animare), [prefs.dark, animare]);
   const [obiettivo, setObiettivo] = useState('7,50');
   const [materiaObiettivo, setMateriaObiettivo] = useState('');
 
@@ -282,7 +290,7 @@ export function Dashboard() {
                   legend: { position: 'bottom' as const, labels: { boxWidth: 10, boxHeight: 10, borderRadius: 5, useBorderRadius: true, font: { size: 11, weight: 'bold' as const }, color: prefs.dark ? '#94a3b8' : '#64748b' } },
                   tooltip: { backgroundColor: '#0f2440', padding: 10, cornerRadius: 12 },
                 },
-                animation: { duration: 750, easing: 'easeOutQuart' as const },
+                animation: animare ? { duration: 750, easing: 'easeOutQuart' as const } : (false as const),
               }}
               data={{
                 labels: ['Voti ≥ 6', 'Voti < 6'],

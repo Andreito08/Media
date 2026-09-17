@@ -16,7 +16,9 @@ export function useCountUp(target: number | null, duration = 700): number | null
       setVal(target);
       return;
     }
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    // Telefono / touch: numero subito, niente re-render a 60fps (PC invariato)
+    const leggera = window.matchMedia?.('(max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce)').matches;
+    if (leggera) {
       setVal(target);
       fromRef.current = target;
       return;

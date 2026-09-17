@@ -7,13 +7,23 @@ import { useEffect } from 'react';
  */
 export function GlobalFx() {
   useEffect(() => {
+    // Su telefono lo scroll resta nativo (fluido): niente rimbalzo custom,
+    // spotlight del tocco alleggerito. Su PC tutto invariato.
+    const touchUi = window.matchMedia?.('(pointer: coarse), (max-width: 768px)').matches ?? false;
+
     // ---------- 1. spotlight nel punto del tocco ----------
     let pressedEl: HTMLElement | null = null;
+    let spotRaf = 0;
 
     const setSpot = (el: HTMLElement, x: number, y: number) => {
       const r = el.getBoundingClientRect();
       el.style.setProperty('--spot-x', `${x - r.left}px`);
       el.style.setProperty('--spot-y', `${y - r.top}px`);
+    };
+
+    const setSpotThrottled = (el: HTMLElement, x: number, y: number) => {
+      cancelAnimationFrame(spotRaf);
+      spotRaf = requestAnimationFrame(() => setSpot(el, x, y));
     };
 
     const onDown = (e: PointerEvent) => {
@@ -26,9 +36,11 @@ export function GlobalFx() {
     };
 
     const onMove = (e: PointerEvent) => {
-      // il dito scivola (mouse/penna): la luce lo segue dentro l'oggetto
-      if (pressedEl && (e.buttons > 0 || e.pointerType !== 'mouse')) {
-        setSpot(pressedEl, e.clientX, e.clientY);
+      // il dito scivola (mouse/penna): la luce lo segue dentro l'oggetto.
+      // Su touch nessun lavoro qui: ci pensa onTouchFollow (throttled).
+      if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      if (pressedEl && e.buttons > 0) {
+        setSpotThrottled(pressedEl, e.clientX, e.clientY);
       }
     };
 
@@ -37,17 +49,26 @@ export function GlobalFx() {
       // si spegne appena il dito esce (es. parte lo scroll)
       if (!pressedEl || e.touches.length !== 1) return;
       const t = e.touches[0];
-      setSpot(pressedEl, t.clientX, t.clientY);
-      const under = document.elementFromPoint(t.clientX, t.clientY);
-      if (!under || !pressedEl.contains(under)) {
-        pressedEl.classList.remove('is-pressed');
-        pressedEl = null;
-      }
+      const el = pressedEl;
+      const x = t.clientX;
+      const y = t.clientY;
+      cancelAnimationFrame(spotRaf);
+      spotRaf = requestAnimationFrame(() => {
+        setSpot(el, x, y);
+        const under = document.elementFromPoint(x, y);
+        if (!under || !el.contains(under)) {
+          el.classList.remove('is-pressed');
+          if (pressedEl === el) pressedEl = null;
+        }
+      });
     };
 
     const clearPressed = () => {
-      pressedEl = null;
-      document.querySelectorAll('.is-pressed').forEach((el) => el.classList.remove('is-pressed'));
+      cancelAnimationFrame(spotRaf);
+      if (pressedEl) {
+        pressedEl.classList.remove('is-pressed');
+        pressedEl = null;
+      }
     };
 
     window.addEventListener('pointerdown', onDown);
@@ -56,7 +77,7 @@ export function GlobalFx() {
     window.addEventListener('touchmove', onTouchFollow, { passive: true });
     window.addEventListener('touchend', clearPressed);
 
-    // ---------- 2. rimbalzo elastico ai bordi (pagina + modale) ----------
+    // ---------- 2. rimbalzo elastico ai bordi (solo PC: su telefono c'è quello nativo) ----------
     // Regole per non litigare col browser:
     // - si ingaggia solo se il tocco PARTE a riposo su un bordo (niente fling in corso)
     // - mai preventDefault se l'evento non è cancellabile (niente errori in console)
@@ -142,10 +163,12 @@ export function GlobalFx() {
       window.setTimeout(() => el.classList.remove('bounce-back'), 600);
     };
 
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: false });
-    window.addEventListener('touchend', onTouchEnd);
-    window.addEventListener('touchcancel', onTouchEnd);
+    if (!touchUi) {
+      window.addEventListener('touchstart', onTouchStart, { passive: true });
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', onTouchEnd);
+      window.addEventListener('touchcancel', onTouchEnd);
+    }
 
     return () => {
       window.removeEventListener('pointerdown', onDown);
@@ -158,6 +181,7 @@ export function GlobalFx() {
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(spotRaf);
     };
   }, []);
 

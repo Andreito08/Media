@@ -122,6 +122,46 @@ button {
   }
 }
 
+/* ============ Mobile perf: grafica alleggerita solo su telefono ============
+   PC invariato. Su schermi piccoli / touch (GPU deboli):
+   - wallpaper statico: niente compositing continuo
+   - backdrop-filter dimezzati: stesso look, metà costo per frame
+   - niente entrata scaglionata sulle liste lunghe */
+@media (max-width: 768px), (pointer: coarse) {
+  .glass-wallpaper span {
+    animation: none;
+    will-change: auto;
+    filter: blur(50px);
+  }
+
+  .glass {
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+  }
+
+  .glass-dark,
+  .glass-emerald {
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    backdrop-filter: blur(16px) saturate(1.3);
+  }
+
+  .btn-liquid-primary,
+  .btn-liquid-soft,
+  .btn-liquid-ghost,
+  .input-liquid {
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    backdrop-filter: blur(8px) saturate(1.2);
+  }
+
+  .stagger > * {
+    animation: none;
+  }
+
+  .animate-fade-up {
+    animation-duration: 0.25s;
+  }
+}
+
 /* ============ Glass surfaces ============ */
 .glass {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.28));
