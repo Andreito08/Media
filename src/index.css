@@ -122,43 +122,94 @@ button {
   }
 }
 
-/* ============ Mobile perf: grafica alleggerita solo su telefono ============
-   PC invariato. Su schermi piccoli / touch (GPU deboli):
-   - wallpaper statico: niente compositing continuo
-   - backdrop-filter dimezzati: stesso look, metà costo per frame
-   - niente entrata scaglionata sulle liste lunghe */
+/* ============ Mobile lite: niente effetti GPU, look pieno solo su PC ============
+   Il backdrop-filter costringe il telefono a ridisegnare il vetro a ogni
+   frame di scroll: qui diventa tinta piatta. Niente blur animati, niente
+   riflessi, niente ombre grandi. Su PC resta tutto invariato. */
 @media (max-width: 768px), (pointer: coarse) {
+  /* Sfondo: solo gradiente piatto, niente blob sfocati */
   .glass-wallpaper span {
-    animation: none;
-    will-change: auto;
-    filter: blur(50px);
+    display: none;
   }
 
-  .glass {
-    -webkit-backdrop-filter: blur(10px) saturate(1.2);
-    backdrop-filter: blur(10px) saturate(1.2);
-  }
-
+  /* Zero backdrop-filter ovunque (anche utility Tailwind backdrop-blur-*) */
+  .glass,
   .glass-dark,
-  .glass-emerald {
-    -webkit-backdrop-filter: blur(16px) saturate(1.3);
-    backdrop-filter: blur(16px) saturate(1.3);
-  }
-
+  .glass-emerald,
   .btn-liquid-primary,
   .btn-liquid-soft,
   .btn-liquid-ghost,
-  .input-liquid {
-    -webkit-backdrop-filter: blur(8px) saturate(1.2);
-    backdrop-filter: blur(8px) saturate(1.2);
+  .input-liquid,
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
+  /* Tinte piatte che reggono senza blur */
+  .glass {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(226, 232, 240, 0.9);
+    box-shadow: 0 2px 12px -6px rgba(31, 38, 135, 0.18);
+  }
+
+  .dark .glass {
+    background: rgba(22, 34, 60, 0.95);
+    box-shadow: 0 2px 12px -6px rgba(0, 0, 0, 0.5);
+  }
+
+  .glass-dark {
+    background: linear-gradient(135deg, #1b2f55, #2456a8);
+    box-shadow: 0 4px 16px -8px rgba(10, 25, 60, 0.5);
+  }
+
+  .glass-emerald {
+    background: linear-gradient(135deg, #063b35, #155e63);
+    box-shadow: 0 4px 16px -8px rgba(4, 60, 60, 0.5);
+  }
+
+  .btn-liquid-primary {
+    background: linear-gradient(135deg, var(--acc-deep), var(--acc));
+    box-shadow: 0 3px 10px -4px rgba(20, 40, 90, 0.5);
+  }
+
+  .btn-liquid-soft {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 2px 8px -4px rgba(31, 38, 135, 0.25);
+  }
+
+  .dark .btn-liquid-soft {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .btn-liquid-ghost {
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .dark .btn-liquid-ghost {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .input-liquid {
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .dark .input-liquid {
+    background: rgba(10, 20, 38, 0.85);
+  }
+
+  /* Riflesso speculare via: un layer in meno per ogni card */
+  .glass-sheen::after {
+    display: none;
+  }
+
+  /* Liste e modali: niente animazioni d'entrata */
   .stagger > * {
     animation: none;
   }
 
-  .animate-fade-up {
-    animation-duration: 0.25s;
+  .animate-fade-up,
+  .animate-pop-in {
+    animation: none;
   }
 }
 

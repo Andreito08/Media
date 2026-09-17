@@ -7,6 +7,7 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useStore } from '../store';
 import { THEMES, hexA, shade } from '../lib/tema';
 import { useCountUp } from '../lib/useCountUp';
+import { useInView } from '../lib/useInView';
 import { formatMedia, mediaGenerale, mediaPesata, votoNecessarioPerObiettivo, pillColoreMedia } from '../lib/grades';
 import { Btn, Card, IconBook, IconChart, IconShield, IconSpark, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 
@@ -22,10 +23,13 @@ function graficaLeggera(): boolean {
   return window.matchMedia('(max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce)').matches;
 }
 
-function makeOpts(grid: string, animate: boolean) {
+function makeOpts(grid: string, animate: boolean, leggera: boolean) {
   return {
     responsive: true,
     maintainAspectRatio: false as const,
+    // Su telefono: canvas a risoluzione dimezzata + niente ridisegni a raffica
+    // quando la barra URL di Chrome/Safari si mostra/nasconde in scroll.
+    ...(leggera ? { devicePixelRatio: 1.5, resizeDelay: 200 } : {}),
     animation: animate ? { duration: 750, easing: 'easeOutQuart' as const } : (false as const),
     plugins: {
       legend: { display: false },
@@ -81,11 +85,23 @@ function Gauge({ value, acc }: { value: number | null; acc: string }) {
   );
 }
 
+/** Monta il canvas solo quando sta per entrare a schermo: su telefono evita
+    4 canvas pesanti tutti insieme all'apertura di Panoramica. */
+function LazyChart({ className, children }: { className?: string; children: React.ReactNode }) {
+  const [ref, visto] = useInView<HTMLDivElement>();
+  return (
+    <div ref={ref} className={className}>
+      {visto ? children : <div className="flex h-full items-center justify-center text-xs font-bold text-slate-400">Caricamento grafico…</div>}
+    </div>
+  );
+}
+
 export function Dashboard() {
   const { materie, voti, profile, prefs } = useStore();
   const T = THEMES[prefs.tema] ?? THEMES.blu;
-  const animare = useMemo(() => !graficaLeggera(), []);
-  const opts = useMemo(() => makeOpts(prefs.dark ? gridDark : gridLight, animare), [prefs.dark, animare]);
+  const leggera = useMemo(() => graficaLeggera(), []);
+  const animare = !leggera;
+  const opts = useMemo(() => makeOpts(prefs.dark ? gridDark : gridLight, animare, leggera), [prefs.dark, animare, leggera]);
   const [obiettivo, setObiettivo] = useState('7,50');
   const [materiaObiettivo, setMateriaObiettivo] = useState('');
 
@@ -193,7 +209,7 @@ export function Dashboard() {
         {trend.labels.length === 0 ? (
           <EmptyState testo="Aggiungi i primi voti e qui vedrai la curva crescere." />
         ) : (
-          <div className="h-52">
+          <LazyChart className="h-52">
             <Line
               options={opts}
               data={{
@@ -214,7 +230,7 @@ export function Dashboard() {
                 }],
               }}
             />
-          </div>
+          </LazyChart>
         )}
       </Card>
 
@@ -223,9 +239,9 @@ export function Dashboard() {
         {righe.length === 0 ? (
           <EmptyState testo="Nessuna materia." />
         ) : (
-          <div className="h-64">
+          <LazyChart className="h-64">
             <Bar options={{ ...opts, indexAxis: 'y' as const }} data={confronto} />
-          </div>
+          </LazyChart>
         )}
         <ul className="stagger mt-4 space-y-1.5">
           {righe.map((r) => (
@@ -249,7 +265,7 @@ export function Dashboard() {
             <EmptyState testo="Nessun voto per questa materia." />
           ) : (
             <>
-              <div className="h-48">
+              <LazyChart className="h-48">
                 <Line
                   options={opts}
                   data={{
@@ -270,7 +286,7 @@ export function Dashboard() {
                     }],
                   }}
                 />
-              </div>
+              </LazyChart>
               <p className="mt-3 rounded-2xl border border-white/50 bg-white/45 py-2.5 text-center text-sm font-semibold text-slate-600 backdrop-blur-md dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                 Media <b className="tabular-nums text-[#16294d] dark:text-blue-100">{formatMedia(dettaglio.media)}</b> su {dettaglio.valori.length} voti
               </p>
@@ -280,11 +296,12 @@ export function Dashboard() {
 
         <Card delay={240}>
           <SectionTitle icon={<IconShield className="h-4 w-4" />} title="Stato e obiettivo" sub="Dove sei e dove vuoi arrivare" />
-          <div className="mx-auto h-44 max-w-[240px]">
+          <LazyChart className="mx-auto h-44 max-w-[240px]">
             <Doughnut
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
+                ...(leggera ? { devicePixelRatio: 1.5, resizeDelay: 200 } : {}),
                 cutout: '68%',
                 plugins: {
                   legend: { position: 'bottom' as const, labels: { boxWidth: 10, boxHeight: 10, borderRadius: 5, useBorderRadius: true, font: { size: 11, weight: 'bold' as const }, color: prefs.dark ? '#94a3b8' : '#64748b' } },
@@ -297,7 +314,7 @@ export function Dashboard() {
                 datasets: [{ data: [voti.filter((v) => v.valore >= 6).length, voti.filter((v) => v.valore < 6).length], backgroundColor: [T.acc, '#ef4444'], hoverBackgroundColor: [shade(T.acc, -18), '#dc2626'], borderWidth: 3, borderColor: '#fff' }],
               }}
             />
-          </div>
+          </LazyChart>
           <div className="mt-4 rounded-2xl border border-white/50 bg-white/45 p-4 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center gap-2 text-sm font-extrabold text-[#16294d] dark:text-blue-100">
               <IconSpark className="h-4 w-4" /> Simulatore: che voto mi serve?
