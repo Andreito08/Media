@@ -4,6 +4,8 @@
 
 **Demo live:** https://andreito08.github.io/Media/
 
+> Versione Flutter (prototipo per confronto): https://github.com/Andreito08/MediaFlutter
+
 <p align="center">
   Voti italiani smart, medie pesate a due decimali, grafici di andamento e backup JSON.
   Si installa su Android e iPhone senza store e funziona anche senza connessione.
