@@ -7,7 +7,6 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useStore } from '../store';
 import { THEMES, hexA, shade } from '../lib/tema';
 import { useCountUp } from '../lib/useCountUp';
-import { useInView } from '../lib/useInView';
 import { formatMedia, mediaGenerale, mediaPesata, votoNecessarioPerObiettivo, pillColoreMedia } from '../lib/grades';
 import { Btn, Card, IconBook, IconChart, IconShield, IconSpark, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 
@@ -81,17 +80,6 @@ function Gauge({ value, acc }: { value: number | null; acc: string }) {
         <span className="text-3xl font-black tabular-nums text-white">{formatMedia(animata)}</span>
         <span className="text-[10px] font-black uppercase tracking-widest text-white/70">media</span>
       </div>
-    </div>
-  );
-}
-
-/** Monta il canvas solo quando sta per entrare a schermo: su telefono evita
-    4 canvas pesanti tutti insieme all'apertura di Panoramica. */
-function LazyChart({ className, children }: { className?: string; children: React.ReactNode }) {
-  const [ref, visto] = useInView<HTMLDivElement>();
-  return (
-    <div ref={ref} className={className}>
-      {visto ? children : <div className="flex h-full items-center justify-center text-xs font-bold text-slate-400">Caricamento grafico…</div>}
     </div>
   );
 }
@@ -209,7 +197,7 @@ export function Dashboard() {
         {trend.labels.length === 0 ? (
           <EmptyState testo="Aggiungi i primi voti e qui vedrai la curva crescere." />
         ) : (
-          <LazyChart className="h-52">
+          <div className="h-52">
             <Line
               options={opts}
               data={{
@@ -230,7 +218,7 @@ export function Dashboard() {
                 }],
               }}
             />
-          </LazyChart>
+          </div>
         )}
       </Card>
 
@@ -239,9 +227,9 @@ export function Dashboard() {
         {righe.length === 0 ? (
           <EmptyState testo="Nessuna materia." />
         ) : (
-          <LazyChart className="h-64">
+          <div className="h-64">
             <Bar options={{ ...opts, indexAxis: 'y' as const }} data={confronto} />
-          </LazyChart>
+          </div>
         )}
         <ul className="stagger mt-4 space-y-1.5">
           {righe.map((r) => (
@@ -265,7 +253,7 @@ export function Dashboard() {
             <EmptyState testo="Nessun voto per questa materia." />
           ) : (
             <>
-              <LazyChart className="h-48">
+              <div className="h-48">
                 <Line
                   options={opts}
                   data={{
@@ -286,7 +274,7 @@ export function Dashboard() {
                     }],
                   }}
                 />
-              </LazyChart>
+              </div>
               <p className="mt-3 rounded-2xl border border-white/50 bg-white/45 py-2.5 text-center text-sm font-semibold text-slate-600 backdrop-blur-md dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                 Media <b className="tabular-nums text-[#16294d] dark:text-blue-100">{formatMedia(dettaglio.media)}</b> su {dettaglio.valori.length} voti
               </p>
@@ -296,7 +284,7 @@ export function Dashboard() {
 
         <Card delay={240}>
           <SectionTitle icon={<IconShield className="h-4 w-4" />} title="Stato e obiettivo" sub="Dove sei e dove vuoi arrivare" />
-          <LazyChart className="mx-auto h-44 max-w-[240px]">
+          <div className="mx-auto h-44 max-w-[240px]">
             <Doughnut
               options={{
                 responsive: true,
@@ -314,7 +302,7 @@ export function Dashboard() {
                 datasets: [{ data: [voti.filter((v) => v.valore >= 6).length, voti.filter((v) => v.valore < 6).length], backgroundColor: [T.acc, '#ef4444'], hoverBackgroundColor: [shade(T.acc, -18), '#dc2626'], borderWidth: 3, borderColor: '#fff' }],
               }}
             />
-          </LazyChart>
+          </div>
           <div className="mt-4 rounded-2xl border border-white/50 bg-white/45 p-4 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center gap-2 text-sm font-extrabold text-[#16294d] dark:text-blue-100">
               <IconSpark className="h-4 w-4" /> Simulatore: che voto mi serve?
