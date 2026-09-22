@@ -4,13 +4,18 @@ import {
   BarElement, ArcElement, Tooltip, Legend, Filler,
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { TrendChart, TrendChartSkeleton } from './TrendChart';
 import { useStore } from '../store';
-import { THEMES, hexA, shade } from '../lib/tema';
+import { THEMES, shade } from '../lib/tema';
 import { useCountUp } from '../lib/useCountUp';
 import { formatMedia, mediaGenerale, mediaPesata, votoNecessarioPerObiettivo, pillColoreMedia } from '../lib/grades';
 import { Btn, Card, IconBook, IconChart, IconShield, IconSpark, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Tooltip, Legend, Filler);
+// Nota: il grafico principale "Andamento" vive in TrendChart.tsx con registrazione
+// minima (CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip).
+// Qui restano BarElement/ArcElement/Legend solo per i grafici secondari (Bar, Doughnut).
+// Se usi SOLO il TrendChart, puoi cancellare questo register e tenere i 6 moduli lì.
 
 const gridLight = 'rgba(100, 116, 139, 0.12)';
 const gridDark = 'rgba(148, 163, 184, 0.16)';
@@ -26,10 +31,11 @@ function makeOpts(grid: string, animate: boolean, leggera: boolean) {
   return {
     responsive: true,
     maintainAspectRatio: false as const,
-    // Su telefono: canvas a risoluzione dimezzata + niente ridisegni a raffica
-    // quando la barra URL di Chrome/Safari si mostra/nasconde in scroll.
-    ...(leggera ? { devicePixelRatio: 1.5, resizeDelay: 200 } : {}),
-    animation: animate ? { duration: 750, easing: 'easeOutQuart' as const } : (false as const),
+    // MODIFICA 3b — resize snello: 50ms invece di 200, così la URL-bar
+    // di Chrome/Safari non accoda ridisegni. Su telefono DPR dimezzato.
+    ...(leggera ? { devicePixelRatio: 1.5, resizeDelay: 50 } : { resizeDelay: 50 }),
+    // MODIFICA 3a — animazione iniziale minima: 200ms su desktop, zero su mobile.
+    animation: animate ? { duration: 200, easing: 'easeOutQuart' as const } : (false as const),
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -85,7 +91,8 @@ function Gauge({ value, acc }: { value: number | null; acc: string }) {
 }
 
 export function Dashboard() {
-  const { materie, voti, profile, prefs } = useStore();
+  const { materie, voti, profile, prefs, pronto } = useStore();
+  const isLoading = !pronto;
   const T = THEMES[prefs.tema] ?? THEMES.blu;
   const leggera = useMemo(() => graficaLeggera(), []);
   const animare = !leggera;
@@ -194,31 +201,14 @@ export function Dashboard() {
 
       <Card delay={60}>
         <SectionTitle icon={<IconChart className="h-4 w-4" />} title="Andamento nel tempo" sub="La tua media dopo ogni voto" />
-        {trend.labels.length === 0 ? (
+        {/* MODIFICA 2+3 — skeleton con la STESSA impronta del canvas (h-64 sm:h-80),
+            poi <TrendChart> tree-shakato con animation:200 + resizeDelay:50. */}
+        {isLoading ? (
+          <TrendChartSkeleton />
+        ) : trend.labels.length === 0 ? (
           <EmptyState testo="Aggiungi i primi voti e qui vedrai la curva crescere." />
         ) : (
-          <div className="h-52">
-            <Line
-              options={opts}
-              data={{
-                labels: trend.labels,
-                datasets: [{
-                  data: trend.data,
-                  borderColor: T.acc,
-                  backgroundColor: areaFill(hexA(T.acc, 0.3), hexA(T.acc, 0.02)),
-                  fill: true,
-                  tension: 0.38,
-                  pointRadius: trend.data.map((v) => (v < 6 ? 4.5 : 0)),
-                  pointHoverRadius: 6,
-                  pointBackgroundColor: trend.data.map((v) => (v < 6 ? '#ef4444' : T.acc)),
-                  pointBorderColor: '#fff',
-                  pointBorderWidth: 2,
-                  segment: { borderColor: (c: any) => (c.p0.parsed.y < 6 || c.p1.parsed.y < 6 ? '#ef4444' : T.acc) },
-                  borderWidth: 2.5,
-                }],
-              }}
-            />
-          </div>
+          <TrendChart labels={trend.labels} data={trend.data} color={T.acc} />
         )}
       </Card>
 
@@ -227,7 +217,9 @@ export function Dashboard() {
         {righe.length === 0 ? (
           <EmptyState testo="Nessuna materia." />
         ) : (
-          <div className="h-64">
+          // MODIFICA 3c — relative + altezza esplicita + min-w-0: niente
+          // allargamenti infiniti del canvas nei layout flex su schermi stretti.
+          <div className="relative h-64 w-full min-w-0 sm:h-80">
             <Bar options={{ ...opts, indexAxis: 'y' as const }} data={confronto} />
           </div>
         )}
@@ -253,7 +245,7 @@ export function Dashboard() {
             <EmptyState testo="Nessun voto per questa materia." />
           ) : (
             <>
-              <div className="h-48">
+              <div className="relative h-48 w-full min-w-0 sm:h-64">
                 <Line
                   options={opts}
                   data={{
@@ -284,18 +276,18 @@ export function Dashboard() {
 
         <Card delay={240}>
           <SectionTitle icon={<IconShield className="h-4 w-4" />} title="Stato e obiettivo" sub="Dove sei e dove vuoi arrivare" />
-          <div className="mx-auto h-44 max-w-[240px]">
+          <div className="relative mx-auto h-44 w-full min-w-0 max-w-[240px]">
             <Doughnut
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
-                ...(leggera ? { devicePixelRatio: 1.5, resizeDelay: 200 } : {}),
+                resizeDelay: 50,
                 cutout: '68%',
                 plugins: {
                   legend: { position: 'bottom' as const, labels: { boxWidth: 10, boxHeight: 10, borderRadius: 5, useBorderRadius: true, font: { size: 11, weight: 'bold' as const }, color: prefs.dark ? '#94a3b8' : '#64748b' } },
                   tooltip: { backgroundColor: '#0f2440', padding: 10, cornerRadius: 12 },
                 },
-                animation: animare ? { duration: 750, easing: 'easeOutQuart' as const } : (false as const),
+                animation: animare ? { duration: 200, easing: 'easeOutQuart' as const } : (false as const),
               }}
               data={{
                 labels: ['Voti ≥ 6', 'Voti < 6'],
