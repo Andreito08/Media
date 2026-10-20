@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
-import { Btn, Card, Field, IconGear, IconUser, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
+import { Btn, Card, Field, Scelta, IconGear, IconUser, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 import { SezioneImpostazioni } from './Impostazioni';
 
 /** Form profilo e scuola (le stesse scelte del primo avvio). */
@@ -92,19 +92,11 @@ function ProfiloForm() {
           <input className={inputCls} value={nome} onChange={(e) => scriviNome(e.target.value)} placeholder="Es. Giulia" />
         </Field>
         <Field label="Grado di scuola">
-          <select className={inputCls} value={profile.grado} onChange={(e) => cambiaGrado(e.target.value as Grado)}>
-            {GRADI.map((g) => (
-              <option key={g.id} value={g.id}>{g.nome}</option>
-            ))}
-          </select>
+          <Scelta value={profile.grado} onChange={cambiaGrado} opzioni={GRADI.map((g) => ({ value: g.id, label: g.nome }))} />
         </Field>
         {profile.grado === 'superiori' ? (
           <Field label="Indirizzo">
-            <select className={inputCls} value={profile.indirizzoId} onChange={(e) => cambiaIndirizzo(e.target.value)}>
-              {INDIRIZZI_SUPERIORI.map((i) => (
-                <option key={i.id} value={i.id}>{i.nome}</option>
-              ))}
-            </select>
+            <Scelta value={profile.indirizzoId} onChange={cambiaIndirizzo} opzioni={INDIRIZZI_SUPERIORI.map((i) => ({ value: i.id, label: i.nome }))} />
           </Field>
         ) : (
           <Field label="Indirizzo">
@@ -112,12 +104,8 @@ function ProfiloForm() {
           </Field>
         )}
         <Field label="Divisione anno">
-          <select className={inputCls} value={profile.periodoTipo}
-            onChange={(e) => aggiornaProfilo({ periodoTipo: e.target.value as typeof profile.periodoTipo })}>
-            <option value="quadrimestre">Quadrimestri</option>
-            <option value="trimestre-penta">Trimestre + Penta</option>
-            <option value="unico">Anno unico</option>
-          </select>
+          <Scelta value={profile.periodoTipo} onChange={(periodoTipo) => aggiornaProfilo({ periodoTipo })}
+            opzioni={[{ value: 'quadrimestre', label: 'Quadrimestri' }, { value: 'trimestre-penta', label: 'Trimestre + Penta' }, { value: 'unico', label: 'Anno unico' }]} />
         </Field>
         <Field label="Quanto vale '+'?" hint="Es. 0,25 → 6+ = 6,25">
           <input className={inputCls} value={plusMostrato}
@@ -147,12 +135,8 @@ export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChi
     if (!aperto) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    // Esc su una tendina aperta chiude solo la tendina, non tutta la finestra.
-    // (:open esiste solo dove la tendina è in pagina; altrove il picker nativo si tiene l'Esc)
-    const tendinaAperta = (t: EventTarget | null) => {
-      try { return !!(t as Element | null)?.closest?.('select')?.matches(':open'); } catch { return false; }
-    };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !tendinaAperta(e.target)) onChiudi(); };
+    // Esc su una tendina aperta chiude solo la tendina, non tutta la finestra
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector(':popover-open')) onChiudi(); };
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prev;

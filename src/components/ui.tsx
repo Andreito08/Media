@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
 import { useStore } from '../store';
 
@@ -160,6 +161,122 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 export const inputCls =
   'input-liquid w-full rounded-full border px-4 py-2.5 text-[15px] font-medium placeholder:font-normal placeholder:text-slate-400';
 
+// ---------------- Scelta (tendina liquid glass) ----------------
+
+/**
+ * Tendina uguale su ogni browser (le <select> native aprono il menu di sistema).
+ * Popover nativo: sta sopra tutto, si chiude con Esc o toccando fuori,
+ * e il focus torna al bottone. Il pannello è in un portal per non finire
+ * dentro <label> o card con overflow nascosto.
+ */
+/** Pannello sotto il bottone (o sopra, se manca spazio). Falso se il bottone è fuori schermo. */
+function posiziona(btn: HTMLElement | null, panel: HTMLElement | null): boolean {
+  if (!btn || !panel) return false;
+  const r = btn.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > innerHeight) return false;
+  const sotto = innerHeight - r.bottom - 12;
+  const sopra = r.top - 12;
+  const giu = sotto >= 240 || sotto >= sopra;
+  const larg = Math.max(r.width, 176);
+  Object.assign(panel.style, {
+    left: `${Math.max(8, Math.min(r.left, innerWidth - larg - 8))}px`,
+    width: `${larg}px`,
+    top: giu ? `${r.bottom + 6}px` : 'auto',
+    bottom: giu ? 'auto' : `${innerHeight - r.top + 6}px`,
+    maxHeight: `${Math.min(320, giu ? sotto : sopra)}px`,
+  });
+  return true;
+}
+
+export function Scelta<T extends string>({
+  value, onChange, opzioni, className = '', ariaLabel,
+}: {
+  value: T; onChange: (v: T) => void; opzioni: { value: T; label: string }[]; className?: string; ariaLabel?: string;
+}) {
+  const id = useId();
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [aperto, setAperto] = useState(false);
+  const corrente = opzioni.find((o) => o.value === value);
+
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const prima = (e: Event) => { if ((e as ToggleEvent).newState === 'open') posiziona(btnRef.current, panel); };
+    const dopo = (e: Event) => {
+      const open = (e as ToggleEvent).newState === 'open';
+      setAperto(open);
+      if (open) (panel.querySelector<HTMLElement>('[aria-selected="true"]') ?? panel.querySelector('button'))?.focus();
+    };
+    panel.addEventListener('beforetoggle', prima);
+    panel.addEventListener('toggle', dopo);
+    return () => {
+      panel.removeEventListener('beforetoggle', prima);
+      panel.removeEventListener('toggle', dopo);
+    };
+  }, []);
+
+  // Pagina che scorre o cambia misura (es. si chiude la tastiera): il pannello
+  // segue il bottone, e si chiude solo se il bottone esce dallo schermo.
+  useEffect(() => {
+    if (!aperto) return;
+    const segui = (e: Event) => {
+      if (e.target instanceof Node && panelRef.current?.contains(e.target)) return;
+      if (!posiziona(btnRef.current, panelRef.current)) panelRef.current?.hidePopover();
+    };
+    window.addEventListener('scroll', segui, true);
+    window.addEventListener('resize', segui);
+    return () => {
+      window.removeEventListener('scroll', segui, true);
+      window.removeEventListener('resize', segui);
+    };
+  }, [aperto]);
+
+  const frecce = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const voci = [...e.currentTarget.querySelectorAll<HTMLElement>('button')];
+    const i = voci.indexOf(document.activeElement as HTMLElement);
+    const vai = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: voci.length - 1 }[e.key];
+    if (vai === undefined) return;
+    e.preventDefault();
+    voci[(vai + voci.length) % voci.length]?.focus();
+  };
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        popoverTarget={id}
+        aria-haspopup="listbox"
+        aria-expanded={aperto}
+        aria-label={ariaLabel}
+        className={`${inputCls} no-grow flex items-center justify-between gap-2 text-left ${className}`}
+      >
+        <span className="truncate">{corrente?.label ?? '—'}</span>
+        <IconChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${aperto ? 'rotate-180' : ''}`} />
+      </button>
+      {createPortal(
+        <div ref={panelRef} id={id} popover="auto" role="listbox" aria-label={ariaLabel} onKeyDown={frecce} className="scelta-panel animate-pop-in">
+          {opzioni.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              role="option"
+              aria-selected={o.value === value}
+              className="scelta-opz no-grow"
+              onClick={() => { onChange(o.value); panelRef.current?.hidePopover(); }}
+            >
+              <span className="truncate">{o.label}</span>
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 // ---------------- Input solo-numerici ----------------
 
 /**
@@ -319,11 +436,7 @@ export function Onboarding() {
           <div className="space-y-5">
             {grado === 'superiori' ? (
               <Field label="Scegli l'indirizzo" hint="Carico le materie giuste. Poi potrai aggiungere e togliere a piacere.">
-                <select className={inputCls} value={indirizzoId} onChange={(e) => setIndirizzoId(e.target.value)}>
-                  {INDIRIZZI_SUPERIORI.map((i) => (
-                    <option key={i.id} value={i.id}>{i.nome}</option>
-                  ))}
-                </select>
+                <Scelta value={indirizzoId} onChange={setIndirizzoId} opzioni={INDIRIZZI_SUPERIORI.map((i) => ({ value: i.id, label: i.nome }))} />
               </Field>
             ) : (
               <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-600 dark:bg-white/5 dark:text-slate-300">
@@ -354,11 +467,7 @@ export function Onboarding() {
         {step === 3 && (
           <div className="space-y-5">
             <Field label="Come è diviso l'anno nella tua scuola?">
-              <select className={inputCls} value={periodoTipo} onChange={(e) => setPeriodoTipo(e.target.value as typeof periodoTipo)}>
-                <option value="quadrimestre">Quadrimestre + Quadrimestre</option>
-                <option value="trimestre-penta">Trimestre + Pentamestre</option>
-                <option value="unico">Anno unico (senza periodi)</option>
-              </select>
+              <Scelta value={periodoTipo} onChange={setPeriodoTipo} opzioni={[{ value: 'quadrimestre', label: 'Quadrimestre + Quadrimestre' }, { value: 'trimestre-penta', label: 'Trimestre + Pentamestre' }, { value: 'unico', label: 'Anno unico (senza periodi)' }]} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Quanto vale '+'?" hint="Tipico 0,25 → 6+ = 6,25">

@@ -277,78 +277,59 @@ button {
   background-color: rgba(10, 20, 38, 0.85);
 }
 
-/* ============ Tendine (select) ============
-   Chiusa: stessa pillola di vetro degli input, freccia uguale su ogni browser.
-   Aperta: dove il browser lo supporta (Chrome/Edge/Android) il menu è un
-   pannello liquid glass; altrove resta il picker nativo (iOS: la rotella). */
-select.input-liquid {
-  appearance: none;
-  padding-right: 2.75rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1rem;
-  cursor: pointer;
-  /* una riga sola anche nelle colonne strette (es. "1° Quadrimestre"),
-     tagliata prima della freccia */
-  white-space: nowrap;
-  overflow: clip;
-  overflow-clip-margin: content-box;
+/* ============ Tendine (componente Scelta) ============
+   Pannello liquid glass uguale su ogni browser, al posto del menu di sistema. */
+.scelta-panel {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+  box-shadow:
+    0 18px 44px -14px rgba(31, 38, 135, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: #1e293b;
 }
 
-@supports (appearance: base-select) {
-  select.input-liquid,
-  select.input-liquid::picker(select) {
-    appearance: base-select;
-  }
+.dark .scelta-panel {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, rgba(30, 45, 75, 0.9), rgba(20, 32, 58, 0.82));
+  box-shadow:
+    0 18px 44px -14px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
 
-  select.input-liquid::picker-icon {
-    display: none;
-  }
+.scelta-opz {
+  display: flex;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.9rem;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+}
 
-  select.input-liquid::picker(select) {
-    margin-block: 0.4rem;
-    padding: 0.35rem;
-    max-height: min(50vh, 22rem);
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    border-radius: 1.25rem;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
-    backdrop-filter: blur(24px) saturate(1.6);
-    box-shadow:
-      0 18px 44px -14px rgba(31, 38, 135, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  }
+.scelta-opz:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--acc) 14%, transparent);
+}
 
-  .dark select.input-liquid::picker(select) {
-    border-color: rgba(255, 255, 255, 0.14);
-    background: linear-gradient(135deg, rgba(30, 45, 75, 0.9), rgba(20, 32, 58, 0.82));
-    box-shadow:
-      0 18px 44px -14px rgba(0, 0, 0, 0.7),
-      inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  }
-
-  select.input-liquid option {
-    padding: 0.6rem 0.9rem;
-    border-radius: 0.9rem;
-    font-size: 15px;
-    font-weight: 600;
-  }
-
-  select.input-liquid option:hover,
-  select.input-liquid option:focus-visible {
+@media (hover: hover) {
+  .scelta-opz:hover {
     background: color-mix(in srgb, var(--acc) 14%, transparent);
-    outline: none;
   }
+}
 
-  select.input-liquid option:checked {
-    background: linear-gradient(135deg, var(--acc-deep), var(--acc));
-    color: #fff;
-  }
-
-  select.input-liquid option::checkmark {
-    display: none;
-  }
+.scelta-opz[aria-selected="true"] {
+  background: linear-gradient(135deg, var(--acc-deep), var(--acc));
+  color: #fff;
 }
 
 /* Transizione morbida quando si cambia tema / dark mode
@@ -682,14 +663,13 @@ button.press-grow:active {
       inset 0 1px 0 rgba(255, 255, 255, 0.35);
   }
 
-  /* regola a parte: ::picker() in una lista invaliderebbe tutta la lista su Safari */
-  select.input-liquid::picker(select) {
+  .scelta-panel {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: rgba(255, 255, 255, 0.97);
   }
 
-  .dark select.input-liquid::picker(select) {
+  .dark .scelta-panel {
     background: rgba(22, 34, 60, 0.98);
   }
 

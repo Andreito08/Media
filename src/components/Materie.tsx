@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { mediaPesata, parseVoto, formatMedia, pillColoreMedia } from '../lib/grades';
-import { Btn, Card, Field, IconBook, IconChevronDown, IconEdit, IconEye, IconPlus, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
+import { Btn, Card, Field, Scelta, IconBook, IconChevronDown, IconEdit, IconEye, IconPlus, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 import type { Periodo, TipoVoto } from '../lib/db';
 
 function etichettaPeriodo(p: Periodo, tipo: string): string {
@@ -146,18 +146,10 @@ export function SezioneMaterie() {
                       <input className={inputCls} value={peso} onChange={(e) => setPeso(soloNumeriDecimali(e.target.value))} {...numDecProps} maxLength={5} />
                     </Field>
                     <Field label="Tipo">
-                      <select className={inputCls} value={tipo} onChange={(e) => setTipo(e.target.value as TipoVoto)}>
-                        <option value="orale">Orale</option>
-                        <option value="scritto">Scritto</option>
-                        <option value="pratico">Pratico</option>
-                        <option value="verifica">Verifica</option>
-                      </select>
+                      <Scelta value={tipo} onChange={setTipo} opzioni={(Object.keys(TIPO_META) as TipoVoto[]).map((t) => ({ value: t, label: TIPO_META[t].label }))} />
                     </Field>
                     <Field label="Periodo">
-                      <select className={inputCls} value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
-                        <option value="primo">{etichettaPeriodo('primo', profile?.periodoTipo ?? 'quadrimestre')}</option>
-                        <option value="secondo">{etichettaPeriodo('secondo', profile?.periodoTipo ?? 'quadrimestre')}</option>
-                      </select>
+                      <Scelta value={periodo} onChange={setPeriodo} opzioni={(['primo', 'secondo'] as const).map((p) => ({ value: p, label: etichettaPeriodo(p, profile?.periodoTipo ?? 'quadrimestre') }))} />
                     </Field>
                   </div>
                   <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-[150px_1fr_auto]">

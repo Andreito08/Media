@@ -9,7 +9,7 @@ import { useStore } from '../store';
 import { THEMES, graficaLeggera, shade } from '../lib/tema';
 import { useCountUp } from '../lib/useCountUp';
 import { formatMedia, mediaGenerale, mediaPesata, votoNecessarioPerObiettivo, pillColoreMedia } from '../lib/grades';
-import { Btn, Card, IconBook, IconChart, IconShield, IconSpark, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
+import { Btn, Card, Scelta, IconBook, IconChart, IconShield, IconSpark, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Tooltip, Legend, Filler);
 // Nota: il grafico principale "Andamento" vive in TrendChart.tsx con registrazione
@@ -101,6 +101,8 @@ export function Dashboard() {
     const media = mediaPesata(vv.map((v) => ({ valore: v.valore, peso: v.peso })));
     return { m, n: vv.length, media };
   }), [visibili, voti]);
+
+  const opzioniMaterie = useMemo(() => visibili.map((m) => ({ value: m.id, label: m.nome })), [visibili]);
 
   const generale = useMemo(() => mediaGenerale(righe.map((r) => r.media)), [righe]);
   const insufficienti = righe.filter((r) => r.media !== null && r.media < 6).length;
@@ -275,9 +277,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card delay={180}>
           <SectionTitle icon={<IconBook className="h-4 w-4" />} title="Dettaglio materia" sub="Voto per voto" />
-          <select className={`${inputCls} mb-3`} value={dettaglio?.mat.id ?? ''} onChange={(e) => setDettaglioId(e.target.value)}>
-            {visibili.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-          </select>
+          <Scelta value={dettaglio?.mat.id ?? ''} onChange={setDettaglioId} opzioni={opzioniMaterie} className="mb-3" ariaLabel="Materia da vedere" />
           {!dettaglio || !dettaglioData || dettaglio.valori.length === 0 ? (
             <EmptyState testo="Nessun voto per questa materia." />
           ) : (
@@ -302,9 +302,7 @@ export function Dashboard() {
               <IconSpark className="h-4 w-4" /> Simulatore: che voto mi serve?
             </div>
             <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_110px_auto]">
-              <select className={inputCls} value={simulazione?.mat.id ?? ''} onChange={(e) => setMateriaObiettivo(e.target.value)}>
-                {visibili.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-              </select>
+              <Scelta value={simulazione?.mat.id ?? ''} onChange={setMateriaObiettivo} opzioni={opzioniMaterie} ariaLabel="Materia per il simulatore" />
               <input className={inputCls} value={obiettivo} onChange={(e) => setObiettivo(soloNumeriDecimali(e.target.value))} placeholder="7,50" {...numDecProps} maxLength={5} aria-label="Media obiettivo" />
               <Btn variant="soft" onClick={() => {}}>Calcola</Btn>
             </div>
