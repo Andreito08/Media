@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
-import { Btn, Field, IconGear, IconUser, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
+import { Btn, Card, Field, IconGear, IconUser, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 import { SezioneImpostazioni } from './Impostazioni';
 
 /** Form profilo e scuola (le stesse scelte del primo avvio). */
@@ -12,6 +12,16 @@ function ProfiloForm() {
   // (il valore salvato è numerico, la bozza è stringa solo-numeri).
   const [plusTxt, setPlusTxt] = useState<string | null>(null);
   const [minusTxt, setMinusTxt] = useState<string | null>(null);
+  // Nome: bozza locale salvata a pausa di digitazione. Prima ogni lettera
+  // scriveva il DB e ricaricava tutta l'app (lag e cursore che salta sui telefoni).
+  // Il timer parte solo digitando, e scatta anche se la finestra si chiude prima.
+  const [nome, setNome] = useState(profile?.nome ?? '');
+  const nomeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const scriviNome = (v: string) => {
+    setNome(v);
+    clearTimeout(nomeTimer.current);
+    nomeTimer.current = setTimeout(() => aggiornaProfilo({ nome: v }), 400);
+  };
 
   // Sincronizza le bozze quando il profilo arriva/cambia dall'esterno
   useEffect(() => {
@@ -75,11 +85,11 @@ function ProfiloForm() {
   };
 
   return (
-    <section className="glass glass-sheen card animate-fade-up p-4 sm:p-5">
+    <Card>
       <SectionTitle icon={<IconUser className="h-4 w-4" />} title="Profilo e scuola" sub="Le stesse scelte del primo avvio" />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Nome alunno">
-          <input className={inputCls} value={profile.nome} onChange={(e) => aggiornaProfilo({ nome: e.target.value })} placeholder="Es. Giulia" />
+          <input className={inputCls} value={nome} onChange={(e) => scriviNome(e.target.value)} placeholder="Es. Giulia" />
         </Field>
         <Field label="Grado di scuola">
           <select className={inputCls} value={profile.grado} onChange={(e) => cambiaGrado(e.target.value as Grado)}>
@@ -126,7 +136,7 @@ function ProfiloForm() {
       <p className="mt-2 text-xs leading-relaxed text-slate-400">
         Cambiare indirizzo non cancella nulla: aggiunge solo le materie che mancano. Le tue personalizzate e i voti restano.
       </p>
-    </section>
+    </Card>
   );
 }
 
@@ -137,23 +147,31 @@ export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChi
     if (!aperto) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    // Esc su una tendina aperta chiude solo la tendina, non tutta la finestra.
+    // (:open esiste solo dove la tendina è in pagina; altrove il picker nativo si tiene l'Esc)
+    const tendinaAperta = (t: EventTarget | null) => {
+      try { return !!(t as Element | null)?.closest?.('select')?.matches(':open'); } catch { return false; }
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !tendinaAperta(e.target)) onChiudi(); };
+    window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
     };
-  }, [aperto]);
+  }, [aperto, onChiudi]);
 
   if (!aperto) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/45 p-3 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/45 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center"
       onClick={onChiudi}
       role="dialog"
       aria-modal="true"
       aria-label="Impostazioni"
     >
       <div
-        className="glass glass-sheen animate-pop-in modal-scroll max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-[1.75rem] p-4 sm:p-5"
+        className="sheet glass glass-sheen animate-pop-in modal-scroll max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-[1.75rem] p-4 sm:p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -161,7 +179,7 @@ export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChi
           <button
             onClick={onChiudi}
             aria-label="Chiudi impostazioni"
-            className="press press-grow flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/60 text-slate-500 ring-1 ring-white/60 hover:text-slate-800 dark:bg-white/10 dark:text-slate-300 dark:ring-white/10"
+            className="btn-liquid-ghost press press-grow flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
           >
             <IconX className="h-4 w-4" />
           </button>

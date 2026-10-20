@@ -109,110 +109,6 @@ button {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .glass-wallpaper span {
-    animation: none;
-  }
-  .animate-fade-up,
-  .animate-pop-in {
-    animation: none;
-  }
-  [data-glow].is-pressed .glow-switch {
-    animation: none;
-  }
-}
-
-/* ============ Mobile lite: niente effetti GPU, look pieno solo su PC ============
-   Il backdrop-filter costringe il telefono a ridisegnare il vetro a ogni
-   frame di scroll: qui diventa tinta piatta. Niente blur animati, niente
-   riflessi, niente ombre grandi. Su PC resta tutto invariato. */
-@media (max-width: 768px), (pointer: coarse) {
-  /* Sfondo: solo gradiente piatto, niente blob sfocati */
-  .glass-wallpaper span {
-    display: none;
-  }
-
-  /* Zero backdrop-filter ovunque (anche utility Tailwind backdrop-blur-*) */
-  .glass,
-  .glass-dark,
-  .glass-emerald,
-  .btn-liquid-primary,
-  .btn-liquid-soft,
-  .btn-liquid-ghost,
-  .input-liquid,
-  [class*="backdrop-blur"] {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-
-  /* Tinte piatte che reggono senza blur */
-  .glass {
-    background: rgba(255, 255, 255, 0.92);
-    border-color: rgba(226, 232, 240, 0.9);
-    box-shadow: 0 2px 12px -6px rgba(31, 38, 135, 0.18);
-  }
-
-  .dark .glass {
-    background: rgba(22, 34, 60, 0.95);
-    box-shadow: 0 2px 12px -6px rgba(0, 0, 0, 0.5);
-  }
-
-  .glass-dark {
-    background: linear-gradient(135deg, #1b2f55, #2456a8);
-    box-shadow: 0 4px 16px -8px rgba(10, 25, 60, 0.5);
-  }
-
-  .glass-emerald {
-    background: linear-gradient(135deg, #063b35, #155e63);
-    box-shadow: 0 4px 16px -8px rgba(4, 60, 60, 0.5);
-  }
-
-  .btn-liquid-primary {
-    background: linear-gradient(135deg, var(--acc-deep), var(--acc));
-    box-shadow: 0 3px 10px -4px rgba(20, 40, 90, 0.5);
-  }
-
-  .btn-liquid-soft {
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 2px 8px -4px rgba(31, 38, 135, 0.25);
-  }
-
-  .dark .btn-liquid-soft {
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  .btn-liquid-ghost {
-    background: rgba(255, 255, 255, 0.6);
-  }
-
-  .dark .btn-liquid-ghost {
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .input-liquid {
-    background: rgba(255, 255, 255, 0.95);
-  }
-
-  .dark .input-liquid {
-    background: rgba(10, 20, 38, 0.85);
-  }
-
-  /* Riflesso speculare via: un layer in meno per ogni card */
-  .glass-sheen::after {
-    display: none;
-  }
-
-  /* Liste e modali: niente animazioni d'entrata */
-  .stagger > * {
-    animation: none;
-  }
-
-  .animate-fade-up,
-  .animate-pop-in {
-    animation: none;
-  }
-}
-
 /* ============ Glass surfaces ============ */
 .glass {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.28));
@@ -245,17 +141,6 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow:
     0 20px 55px -18px rgba(10, 25, 60, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.12);
-}
-
-.glass-emerald {
-  background: linear-gradient(135deg, rgba(4, 60, 54, 0.62), rgba(30, 90, 110, 0.55));
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  backdrop-filter: blur(28px) saturate(1.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 20px 55px -18px rgba(4, 60, 60, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 0 -1px 0 rgba(255, 255, 255, 0.12);
 }
@@ -306,8 +191,10 @@ button {
   color: #fff;
 }
 
-.btn-liquid-primary:hover {
-  filter: brightness(1.12);
+@media (hover: hover) {
+  .btn-liquid-primary:hover {
+    filter: brightness(1.12);
+  }
 }
 
 .btn-liquid-soft {
@@ -327,8 +214,10 @@ button {
   color: #dbeafe;
 }
 
-.btn-liquid-soft:hover {
-  filter: brightness(1.06);
+@media (hover: hover) {
+  .btn-liquid-soft:hover {
+    filter: brightness(1.06);
+  }
 }
 
 .btn-liquid-ghost {
@@ -346,13 +235,15 @@ button {
   color: #cbd5e1;
 }
 
-.btn-liquid-ghost:hover {
-  filter: brightness(1.08);
+@media (hover: hover) {
+  .btn-liquid-ghost:hover {
+    filter: brightness(1.08);
+  }
 }
 
 /* ============ Glass inputs ============ */
 .input-liquid {
-  background: rgba(255, 255, 255, 0.55);
+  background-color: rgba(255, 255, 255, 0.55);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.7);
@@ -363,7 +254,7 @@ button {
 }
 
 .dark .input-liquid {
-  background: rgba(10, 20, 38, 0.55);
+  background-color: rgba(10, 20, 38, 0.55);
   border-color: rgba(255, 255, 255, 0.16);
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
   color: #e2e8f0;
@@ -374,7 +265,7 @@ button {
 }
 
 .input-liquid:focus {
-  background: rgba(255, 255, 255, 0.85);
+  background-color: rgba(255, 255, 255, 0.85);
   border-color: color-mix(in srgb, var(--acc) 75%, transparent);
   box-shadow:
     0 0 0 4px color-mix(in srgb, var(--acc) 22%, transparent),
@@ -383,14 +274,87 @@ button {
 }
 
 .dark .input-liquid:focus {
-  background: rgba(10, 20, 38, 0.85);
+  background-color: rgba(10, 20, 38, 0.85);
+}
+
+/* ============ Tendine (select) ============
+   Chiusa: stessa pillola di vetro degli input, freccia uguale su ogni browser.
+   Aperta: dove il browser lo supporta (Chrome/Edge/Android) il menu è un
+   pannello liquid glass; altrove resta il picker nativo (iOS: la rotella). */
+select.input-liquid {
+  appearance: none;
+  padding-right: 2.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  cursor: pointer;
+  /* una riga sola anche nelle colonne strette (es. "1° Quadrimestre"),
+     tagliata prima della freccia */
+  white-space: nowrap;
+  overflow: clip;
+  overflow-clip-margin: content-box;
+}
+
+@supports (appearance: base-select) {
+  select.input-liquid,
+  select.input-liquid::picker(select) {
+    appearance: base-select;
+  }
+
+  select.input-liquid::picker-icon {
+    display: none;
+  }
+
+  select.input-liquid::picker(select) {
+    margin-block: 0.4rem;
+    padding: 0.35rem;
+    max-height: min(50vh, 22rem);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(24px) saturate(1.6);
+    box-shadow:
+      0 18px 44px -14px rgba(31, 38, 135, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .dark select.input-liquid::picker(select) {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: linear-gradient(135deg, rgba(30, 45, 75, 0.9), rgba(20, 32, 58, 0.82));
+    box-shadow:
+      0 18px 44px -14px rgba(0, 0, 0, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  select.input-liquid option {
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.9rem;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  select.input-liquid option:hover,
+  select.input-liquid option:focus-visible {
+    background: color-mix(in srgb, var(--acc) 14%, transparent);
+    outline: none;
+  }
+
+  select.input-liquid option:checked {
+    background: linear-gradient(135deg, var(--acc-deep), var(--acc));
+    color: #fff;
+  }
+
+  select.input-liquid option::checkmark {
+    display: none;
+  }
 }
 
 /* Transizione morbida quando si cambia tema / dark mode
    (solo proprietà economiche: niente ombre, che scattano) */
 .glass,
 .glass-dark,
-.glass-emerald,
 .btn-liquid-primary,
 .btn-liquid-soft,
 .btn-liquid-ghost,
@@ -584,8 +548,10 @@ button.press-grow:active {
     box-shadow 0.25s ease;
 }
 
-.lift:hover {
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .lift:hover {
+    transform: translateY(-2px);
+  }
 }
 
 /* ============ motion ============ */
@@ -633,4 +599,121 @@ button.press-grow:active {
 *::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 196, 0.6);
   border-radius: 99px;
+}
+
+/* ============ Telefono: liquid glass leggero ============
+   DEVE restare in fondo al file: a pari specificità vince la regola scritta
+   dopo, e prima stava sopra le regole base (che quindi la annullavano:
+   sui telefoni il backdrop-filter restava attivo ovunque).
+   Il backdrop-filter costringe il telefono a ri-sfocare a ogni frame di
+   scroll: qui sparisce. L'effetto vetro resta con sfondo colorato statico
+   (gradienti, niente blur animati) + superfici traslucide e riflessi. */
+@media (max-width: 768px), (pointer: coarse) {
+  /* Le macchie colorate diventano gradienti fermi: stesso look, zero GPU */
+  .glass-wallpaper span {
+    display: none;
+  }
+
+  .glass-wallpaper {
+    background:
+      radial-gradient(60vmax 60vmax at 0% 0%, rgba(147, 197, 253, 0.55), transparent 70%),
+      radial-gradient(50vmax 50vmax at 100% 30%, rgba(103, 232, 249, 0.35), transparent 70%),
+      radial-gradient(60vmax 60vmax at 40% 105%, rgba(125, 211, 252, 0.45), transparent 70%),
+      linear-gradient(180deg, #f2f4fb 0%, #e7ebf5 100%);
+  }
+
+  .dark .glass-wallpaper {
+    background:
+      radial-gradient(60vmax 60vmax at 0% 0%, rgba(147, 197, 253, 0.16), transparent 70%),
+      radial-gradient(50vmax 50vmax at 100% 30%, rgba(103, 232, 249, 0.1), transparent 70%),
+      radial-gradient(60vmax 60vmax at 40% 105%, rgba(125, 211, 252, 0.14), transparent 70%),
+      linear-gradient(180deg, #0b1220 0%, #0e1930 100%);
+  }
+
+  /* Zero backdrop-filter ovunque (anche utility Tailwind backdrop-blur-*) */
+  .glass,
+  .glass-dark,
+  .btn-liquid-primary,
+  .btn-liquid-soft,
+  .btn-liquid-ghost,
+  .input-liquid,
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* Senza blur il vetro deve essere un filo più pieno per restare leggibile */
+  .glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.55));
+    box-shadow:
+      0 6px 20px -10px rgba(31, 38, 135, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .dark .glass {
+    background: linear-gradient(135deg, rgba(30, 45, 75, 0.92), rgba(20, 32, 58, 0.85));
+    box-shadow:
+      0 6px 20px -10px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  /* Header fisso e finestre: il contenuto ci scorre sotto, serve più copertura */
+  header.glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88));
+  }
+
+  .sheet.glass {
+    background: linear-gradient(135deg, rgba(250, 252, 255, 0.99), rgba(240, 245, 253, 0.97));
+  }
+
+  .dark header.glass,
+  .dark .sheet.glass {
+    background: linear-gradient(135deg, rgba(30, 45, 75, 0.99), rgba(20, 32, 58, 0.97));
+  }
+
+  .glass-dark {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--acc-deep) 94%, transparent),
+      color-mix(in srgb, var(--acc) 88%, transparent)
+    );
+    box-shadow:
+      0 10px 28px -14px rgba(10, 25, 60, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  /* regola a parte: ::picker() in una lista invaliderebbe tutta la lista su Safari */
+  select.input-liquid::picker(select) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.97);
+  }
+
+  .dark select.input-liquid::picker(select) {
+    background: rgba(22, 34, 60, 0.98);
+  }
+
+  /* Bagliori decorativi sfocati: filter blur grande = ridisegno costoso */
+  .glass-dark > .blur-2xl,
+  .glass-dark > .blur-3xl {
+    display: none;
+  }
+
+  /* Liste e modali: niente animazioni d'entrata */
+  .stagger > *,
+  .animate-fade-up,
+  .animate-pop-in {
+    animation: none;
+  }
+}
+
+/* Anche questo in fondo, per vincere sulle regole d'animazione sopra */
+@media (prefers-reduced-motion: reduce) {
+  .glass-wallpaper span,
+  .stagger > *,
+  .animate-fade-up,
+  .animate-pop-in,
+  [data-glow].is-pressed .glow-switch {
+    animation: none;
+  }
 }

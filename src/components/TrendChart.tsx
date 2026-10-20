@@ -10,6 +10,7 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { graficaLeggera } from '../lib/tema';
 
 // Tree-shaking stretto: solo i moduli necessari al grafico Line.
 // Niente `chart.js/auto`. Filler serve per `fill: true` (area sfumata),
@@ -50,7 +51,8 @@ export function TrendChart({ labels, data, color, isLoading = false }: TrendChar
       // Feedback rapido al primo paint su smartphone, niente jank da resize
       // quando la URL-bar di Chrome/Safari appare/scompare.
       resizeDelay: 50,
-      animation: { duration: 200 },
+      // Su telefono: niente animazione e canvas a DPR 1.5 invece di 3 (come gli altri grafici)
+      ...(graficaLeggera() ? { animation: false as const, devicePixelRatio: 1.5 } : { animation: { duration: 200 } }),
       plugins: {
         legend: { display: false },
         tooltip: {

@@ -63,3 +63,9 @@ export function shade(hex: string, amt: number): string {
   b = Math.round((t - b) * p + b);
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
+
+/** Telefono / touch / reduced-motion: niente animazioni canvas e DPR ridotto (PC invariato). */
+export function graficaLeggera(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce)').matches;
+}

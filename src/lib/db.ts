@@ -74,7 +74,32 @@ export const oggiISO = () => new Date().toISOString().slice(0, 10);
 // ---- Snapshot anti-perdita: ultimi 10 backup automatici in localStorage ----
 const SNAP_KEY = 'medie-snapshots-v1';
 
+// Copia in memoria: prima ogni salvataggio (e ogni render delle impostazioni)
+// rifaceva JSON.parse di 10 copie dell'intero DB, pesante sui telefoni lenti.
+let snapCache: { at: number }[] | null = null;
+let snapTimer: ReturnType<typeof setTimeout> | undefined;
+const snapListeners = new Set<() => void>();
+
+/** Per useSyncExternalStore: il contatore backup si aggiorna anche se lo snapshot arriva dopo il render. */
+export function iscrivitiSnapshots(fn: () => void) {
+  snapListeners.add(fn);
+  return () => { snapListeners.delete(fn); };
+}
+
+function snapshots(): { at: number }[] {
+  if (!snapCache) {
+    try {
+      const raw = localStorage.getItem(SNAP_KEY);
+      snapCache = raw ? (JSON.parse(raw) as { at: number }[]) : [];
+    } catch {
+      snapCache = [];
+    }
+  }
+  return snapCache;
+}
+
 export async function scattaSnapshotAutomatico() {
+  clearTimeout(snapTimer); // uno snapshot immediato assorbe quello in coda
   try {
     const [profile, anni, materie, voti] = await Promise.all([
       db.profile.toArray(),
@@ -82,23 +107,33 @@ export async function scattaSnapshotAutomatico() {
       db.materie.toArray(),
       db.voti.toArray(),
     ]);
-    const snap = { at: Date.now(), profile, anni, materie, voti };
-    const raw = localStorage.getItem(SNAP_KEY);
-    const arr = raw ? (JSON.parse(raw) as unknown[]) : [];
-    arr.unshift(snap);
-    localStorage.setItem(SNAP_KEY, JSON.stringify(arr.slice(0, 10)));
+    const arr = [{ at: Date.now(), profile, anni, materie, voti }, ...snapshots()].slice(0, 10);
+    localStorage.setItem(SNAP_KEY, JSON.stringify(arr));
+    snapCache = arr;
+    snapListeners.forEach((fn) => fn());
   } catch {
     // mai bloccare l'app per il backup
   }
 }
 
+/**
+ * Snapshot dopo una raffica di modifiche: uno solo, fuori dal tocco.
+ * ponytail: se l'app viene chiusa entro 1,5s salta solo lo snapshot; i dati sono già in IndexedDB.
+ */
+export function programmaSnapshot() {
+  clearTimeout(snapTimer);
+  snapTimer = setTimeout(scattaSnapshotAutomatico, 1500);
+}
+
 export function leggiSnapshots(): { at: number }[] {
-  try {
-    const raw = localStorage.getItem(SNAP_KEY);
-    return raw ? (JSON.parse(raw) as { at: number }[]) : [];
-  } catch {
-    return [];
-  }
+  return snapshots();
+}
+
+export function cancellaSnapshots() {
+  clearTimeout(snapTimer);
+  snapCache = null;
+  localStorage.removeItem(SNAP_KEY);
+  snapListeners.forEach((fn) => fn());
 }
 
 export async function esportaJSON(): Promise<string> {

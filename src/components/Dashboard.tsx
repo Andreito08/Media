@@ -6,7 +6,7 @@ import {
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { TrendChart, TrendChartSkeleton } from './TrendChart';
 import { useStore } from '../store';
-import { THEMES, shade } from '../lib/tema';
+import { THEMES, graficaLeggera, shade } from '../lib/tema';
 import { useCountUp } from '../lib/useCountUp';
 import { formatMedia, mediaGenerale, mediaPesata, votoNecessarioPerObiettivo, pillColoreMedia } from '../lib/grades';
 import { Btn, Card, IconBook, IconChart, IconShield, IconSpark, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
@@ -20,12 +20,6 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 const gridLight = 'rgba(100, 116, 139, 0.12)';
 const gridDark = 'rgba(148, 163, 184, 0.16)';
 const tickColor = '#94a3b8';
-
-/** Telefono / touch / reduced-motion: niente animazioni canvas (PC invariato). */
-function graficaLeggera(): boolean {
-  if (typeof window === 'undefined' || !window.matchMedia) return false;
-  return window.matchMedia('(max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce)').matches;
-}
 
 function makeOpts(grid: string, animate: boolean, leggera: boolean) {
   return {
@@ -139,6 +133,10 @@ export function Dashboard() {
     }],
   }), [righe, T.acc]);
 
+  // Options/data memorizzati: oggetti nuovi a ogni render facevano ridisegnare
+  // tutti i grafici a ogni tasto (es. digitando nel simulatore).
+  const barOpts = useMemo(() => ({ ...opts, indexAxis: 'y' as const }), [opts]);
+
   const [dettaglioId, setDettaglioId] = useState<string>('');
   const dettaglio = useMemo(() => {
     const id = dettaglioId || visibili[0]?.id;
@@ -152,6 +150,45 @@ export function Dashboard() {
       media: mediaPesata(vv.map((v) => ({ valore: v.valore, peso: v.peso }))),
     };
   }, [dettaglioId, visibili, voti]);
+
+  const dettaglioData = useMemo(() => dettaglio && ({
+    labels: dettaglio.labels,
+    datasets: [{
+      data: dettaglio.valori,
+      borderColor: dettaglio.mat.colore,
+      backgroundColor: areaFill(`${dettaglio.mat.colore}55`, `${dettaglio.mat.colore}08`),
+      fill: true,
+      tension: 0.3,
+      pointRadius: dettaglio.valori.map((v) => (v < 6 ? 5.5 : 3.5)),
+      pointHoverRadius: 6,
+      pointBackgroundColor: dettaglio.valori.map((v) => (v < 6 ? '#ef4444' : '#fff')),
+      pointBorderColor: dettaglio.valori.map((v) => (v < 6 ? '#ef4444' : dettaglio.mat.colore)),
+      pointBorderWidth: 2.5,
+      segment: { borderColor: (c: any) => (c.p0.parsed.y < 6 || c.p1.parsed.y < 6 ? '#ef4444' : dettaglio.mat.colore) },
+      borderWidth: 2.5,
+    }],
+  }), [dettaglio]);
+
+  const statoOpts = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    resizeDelay: 50,
+    ...(leggera ? { devicePixelRatio: 1.5 } : {}),
+    cutout: '68%',
+    plugins: {
+      legend: { position: 'bottom' as const, labels: { boxWidth: 10, boxHeight: 10, borderRadius: 5, useBorderRadius: true, font: { size: 11, weight: 'bold' as const }, color: prefs.dark ? '#94a3b8' : '#64748b' } },
+      tooltip: { backgroundColor: '#0f2440', padding: 10, cornerRadius: 12 },
+    },
+    animation: animare ? { duration: 200, easing: 'easeOutQuart' as const } : (false as const),
+  }), [prefs.dark, animare, leggera]);
+
+  const statoData = useMemo(() => {
+    const sufficienti = voti.filter((v) => v.valore >= 6).length;
+    return {
+      labels: ['Voti ≥ 6', 'Voti < 6'],
+      datasets: [{ data: [sufficienti, voti.length - sufficienti], backgroundColor: [T.acc, '#ef4444'], hoverBackgroundColor: [shade(T.acc, -18), '#dc2626'], borderWidth: 3, borderColor: prefs.dark ? '#16223c' : '#fff' }],
+    };
+  }, [voti, T.acc, prefs.dark]);
 
   const simulazione = useMemo(() => {
     const ob = Number(obiettivo.replace(',', '.'));
@@ -220,7 +257,7 @@ export function Dashboard() {
           // MODIFICA 3c — relative + altezza esplicita + min-w-0: niente
           // allargamenti infiniti del canvas nei layout flex su schermi stretti.
           <div className="relative h-64 w-full min-w-0 sm:h-80">
-            <Bar options={{ ...opts, indexAxis: 'y' as const }} data={confronto} />
+            <Bar options={barOpts} data={confronto} />
           </div>
         )}
         <ul className="stagger mt-4 space-y-1.5">
@@ -241,31 +278,12 @@ export function Dashboard() {
           <select className={`${inputCls} mb-3`} value={dettaglio?.mat.id ?? ''} onChange={(e) => setDettaglioId(e.target.value)}>
             {visibili.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
           </select>
-          {!dettaglio || dettaglio.valori.length === 0 ? (
+          {!dettaglio || !dettaglioData || dettaglio.valori.length === 0 ? (
             <EmptyState testo="Nessun voto per questa materia." />
           ) : (
             <>
               <div className="relative h-48 w-full min-w-0 sm:h-64">
-                <Line
-                  options={opts}
-                  data={{
-                    labels: dettaglio.labels,
-                    datasets: [{
-                      data: dettaglio.valori,
-                      borderColor: dettaglio.mat.colore,
-                      backgroundColor: areaFill(`${dettaglio.mat.colore}55`, `${dettaglio.mat.colore}08`),
-                      fill: true,
-                      tension: 0.3,
-                      pointRadius: dettaglio.valori.map((v) => (v < 6 ? 5.5 : 3.5)),
-                      pointHoverRadius: 6,
-                      pointBackgroundColor: dettaglio.valori.map((v) => (v < 6 ? '#ef4444' : '#fff')),
-                      pointBorderColor: dettaglio.valori.map((v) => (v < 6 ? '#ef4444' : dettaglio.mat.colore)),
-                      pointBorderWidth: 2.5,
-                      segment: { borderColor: (c: any) => (c.p0.parsed.y < 6 || c.p1.parsed.y < 6 ? '#ef4444' : dettaglio.mat.colore) },
-                      borderWidth: 2.5,
-                    }],
-                  }}
-                />
+                <Line options={opts} data={dettaglioData} />
               </div>
               <p className="mt-3 rounded-2xl border border-white/50 bg-white/45 py-2.5 text-center text-sm font-semibold text-slate-600 backdrop-blur-md dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                 Media <b className="tabular-nums text-[#16294d] dark:text-blue-100">{formatMedia(dettaglio.media)}</b> su {dettaglio.valori.length} voti
@@ -277,23 +295,7 @@ export function Dashboard() {
         <Card delay={240}>
           <SectionTitle icon={<IconShield className="h-4 w-4" />} title="Stato e obiettivo" sub="Dove sei e dove vuoi arrivare" />
           <div className="relative mx-auto h-44 w-full min-w-0 max-w-[240px]">
-            <Doughnut
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                resizeDelay: 50,
-                cutout: '68%',
-                plugins: {
-                  legend: { position: 'bottom' as const, labels: { boxWidth: 10, boxHeight: 10, borderRadius: 5, useBorderRadius: true, font: { size: 11, weight: 'bold' as const }, color: prefs.dark ? '#94a3b8' : '#64748b' } },
-                  tooltip: { backgroundColor: '#0f2440', padding: 10, cornerRadius: 12 },
-                },
-                animation: animare ? { duration: 200, easing: 'easeOutQuart' as const } : (false as const),
-              }}
-              data={{
-                labels: ['Voti ≥ 6', 'Voti < 6'],
-                datasets: [{ data: [voti.filter((v) => v.valore >= 6).length, voti.filter((v) => v.valore < 6).length], backgroundColor: [T.acc, '#ef4444'], hoverBackgroundColor: [shade(T.acc, -18), '#dc2626'], borderWidth: 3, borderColor: '#fff' }],
-              }}
-            />
+            <Doughnut options={statoOpts} data={statoData} />
           </div>
           <div className="mt-4 rounded-2xl border border-white/50 bg-white/45 p-4 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center gap-2 text-sm font-extrabold text-[#16294d] dark:text-blue-100">
@@ -324,8 +326,8 @@ export function Dashboard() {
 
 function EmptyState({ testo }: { testo: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-white/70 bg-white/30 px-4 py-8 text-center backdrop-blur-md">
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200"><IconChart className="h-5 w-5" /></span>
+    <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-white/70 bg-white/30 px-4 py-8 text-center backdrop-blur-md dark:border-white/15 dark:bg-white/5">
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm ring-1 ring-slate-200 dark:bg-white/10 dark:ring-white/10"><IconChart className="h-5 w-5" /></span>
       <p className="text-sm font-semibold text-slate-400">{testo}</p>
     </div>
   );

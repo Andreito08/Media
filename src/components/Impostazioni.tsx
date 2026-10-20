@@ -1,19 +1,19 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { useStore } from '../store';
-import { esportaJSON, importaJSON, leggiSnapshots } from '../lib/db';
+import { esportaJSON, importaJSON, iscrivitiSnapshots, leggiSnapshots } from '../lib/db';
 import { formatMedia, mediaGenerale, mediaPesata } from '../lib/grades';
 import { Btn, Card, IconCheck, IconDownload, IconGrid, IconMoon, IconPalette, IconPrint, IconShield, IconSun, IconUpload, SectionTitle, inputCls } from './ui';
 import { THEMES, type TemaId } from '../lib/tema';
 
 export function SezioneImpostazioni() {
-  const { profile, prefs, impostaTema, toggleDark, anni, anno, materie, voti, cambiaAnno, creaAnno, resetTutto } = useStore();
+  const { profile, prefs, impostaTema, toggleDark, anni, anno, materie, voti, cambiaAnno, creaAnno, resetTutto, ricarica } = useStore();
 
   const [msg, setMsg] = useState('');
   const [nuovoAnno, setNuovoAnno] = useState('');
   const [copia, setCopia] = useState(true);
   const [pericolo, setPericolo] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const snaps = leggiSnapshots();
+  const nSnap = useSyncExternalStore(iscrivitiSnapshots, () => leggiSnapshots().length);
 
   const scaricaBackup = async () => {
     try {
@@ -35,6 +35,7 @@ export function SezioneImpostazioni() {
     try {
       const testo = await f.text();
       const r = await importaJSON(testo);
+      await ricarica();
       setMsg(`Ripristinati ${r.voti} voti, ${r.materie} materie, ${r.anni} anni. Snapshot di sicurezza creato prima dell'import.`);
     } catch {
       setMsg('File non valido: usa un backup .json creato da questa app.');
@@ -77,14 +78,12 @@ export function SezioneImpostazioni() {
                 title={t.nome}
                 aria-label={`Tema ${t.nome}`}
                 aria-pressed={active}
-                className={`press flex items-center gap-2 rounded-full py-2 pl-2 pr-4 text-[13px] font-bold transition ${
-                  active
-                    ? 'bg-slate-900 text-white shadow-lg dark:bg-white dark:text-slate-900'
-                    : 'bg-white/50 text-slate-600 ring-1 ring-white/60 hover:bg-white/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10'
+                className={`press flex items-center gap-2 rounded-full py-2 pl-2 pr-4 text-[13px] font-bold ${
+                  active ? 'btn-liquid-primary' : 'btn-liquid-ghost'
                 }`}
               >
                 <span
-                  className={`h-6 w-6 rounded-full shadow-inner ${active ? 'ring-2 ring-white/80 ring-offset-2 ring-offset-transparent' : 'ring-1 ring-black/10'}`}
+                  className={`h-6 w-6 rounded-full shadow-inner ${active ? 'ring-2 ring-white/80' : 'ring-1 ring-black/10'}`}
                   style={{ background: `linear-gradient(135deg, ${t.deep}, ${t.acc})` }}
                 />
                 {t.nome}
@@ -107,14 +106,14 @@ export function SezioneImpostazioni() {
             </span>
             <span className="block text-xs font-medium text-slate-400">Tocca per passare {prefs.dark ? 'alla chiara' : 'alla scura'}</span>
           </span>
-          <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${prefs.dark ? 'bg-slate-700' : 'bg-slate-300'}`}>
+          <span className={`relative h-7 w-12 shrink-0 rounded-full transition ${prefs.dark ? 'acc-chip' : 'bg-slate-300 dark:bg-white/15'}`}>
             <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${prefs.dark ? 'left-6' : 'left-1'}`} />
           </span>
         </button>
       </Card>
 
-      <section className="glass-emerald glass-sheen animate-fade-up relative overflow-hidden rounded-[1.75rem] p-5 text-white sm:p-6">
-        <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl" />
+      <section className="glass-dark glass-sheen animate-fade-up relative overflow-hidden rounded-[1.75rem] p-5 text-white sm:p-6">
+        <div className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-cyan-300/20 blur-3xl" />
         <div className="relative">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
@@ -122,17 +121,17 @@ export function SezioneImpostazioni() {
             </span>
             <div>
               <h2 className="text-[15px] font-black tracking-tight">I tuoi voti sono al sicuro</h2>
-              <p className="text-xs font-medium text-emerald-100/80">Salvataggio sul dispositivo + {snaps.length}/10 backup automatici interni · funziona offline</p>
+              <p className="text-xs font-medium text-sky-100/80">Salvataggio sul dispositivo + {nSnap}/10 backup automatici interni · funziona offline</p>
             </div>
           </div>
           {/* barra snapshot */}
           <div className="mt-3.5 flex gap-1.5">
             {Array.from({ length: 10 }).map((_, i) => (
-              <span key={i} className={`h-2 flex-1 rounded-full ${i < snaps.length ? 'bg-emerald-300' : 'bg-white/20'}`} />
+              <span key={i} className={`h-2 flex-1 rounded-full ${i < nSnap ? 'bg-white' : 'bg-white/20'}`} />
             ))}
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={scaricaBackup} className="press inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-black text-emerald-950 shadow-lg">
+            <button onClick={scaricaBackup} className="press inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-black text-(--acc-deep) shadow-lg">
               <IconDownload /> Backup .json
             </button>
             <button onClick={() => fileRef.current?.click()} className="press inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/25 backdrop-blur hover:bg-white/20">
@@ -145,7 +144,7 @@ export function SezioneImpostazioni() {
           <input ref={fileRef} type="file" accept=".json,application/json" className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) suFile(f); e.target.value = ''; }} />
           {msg && <p className="animate-pop-in mt-3 rounded-2xl bg-white/10 px-3.5 py-2.5 text-[13px] font-bold ring-1 ring-white/20">{msg}</p>}
-          <p className="mt-3 text-[11px] font-medium leading-relaxed text-emerald-100/70">
+          <p className="mt-3 text-[11px] font-medium leading-relaxed text-sky-100/70">
             Sul telefono: Android (Chrome → ⋮ → Installa app), iPhone (Safari → Condividi → Aggiungi a schermata Home). Scarica il .json ogni mese: è la tua assicurazione.
           </p>
         </div>
@@ -158,7 +157,7 @@ export function SezioneImpostazioni() {
             <button
               key={a.id}
               onClick={() => cambiaAnno(a.id)}
-              className={`press rounded-full px-4 py-2 text-sm font-black ring-1 ${a.id === anno?.id ? 'acc-chip ring-transparent' : 'bg-slate-50 text-slate-500 ring-slate-200 hover:bg-white dark:bg-white/5 dark:text-slate-300 dark:ring-white/10 dark:hover:bg-white/10'}`}
+              className={`press rounded-full px-4 py-2 text-sm font-black ${a.id === anno?.id ? 'btn-liquid-primary' : 'btn-liquid-ghost'}`}
             >
               {a.label}
             </button>

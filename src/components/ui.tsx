@@ -326,7 +326,7 @@ export function Onboarding() {
                 </select>
               </Field>
             ) : (
-              <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
+              <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-600 dark:bg-white/5 dark:text-slate-300">
                 Per <b>{indirizzoNome}</b> ho già pronto il set di materie standard. Potrai personalizzarlo dopo.
               </p>
             )}

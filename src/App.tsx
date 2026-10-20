@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StoreProvider, useStore } from './store';
 import { IconBook, IconChart, Onboarding } from './components/ui';
 import { Dashboard } from './components/Dashboard';
@@ -15,6 +15,7 @@ function Shell() {
   const { pronto, profile, materie, voti } = useStore();
   const [tab, setTab] = useState<Tab>('panoramica');
   const [profiloAperto, setProfiloAperto] = useState(false);
+  const chiudiProfilo = useCallback(() => setProfiloAperto(false), []);
 
   // MODIFICA 1 — mai più `if (!pronto) return null`: la scocca fissa
   // (header + navbar + contenitori card) è visibile al primo render.
@@ -148,7 +149,7 @@ function Shell() {
         )}
       </main>
 
-      <ImpostazioniModal aperto={profiloAperto} onChiudi={() => setProfiloAperto(false)} />
+      <ImpostazioniModal aperto={profiloAperto} onChiudi={chiudiProfilo} />
     </div>
   );
 }

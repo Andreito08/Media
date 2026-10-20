@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { db, scattaSnapshotAutomatico, uid, oggiISO, type Anno, type Materia, type Periodo, type Profile, type TipoVoto, type Voto } from './lib/db';
+import { db, cancellaSnapshots, programmaSnapshot, scattaSnapshotAutomatico, uid, oggiISO, type Anno, type Materia, type Periodo, type Profile, type TipoVoto, type Voto } from './lib/db';
 import { COLORI_MATERIE, materieDefaultPerIndirizzo, type Grado } from './data/indirizzi';
 import { PREFS_KEY, THEMES, loadPrefs, type Prefs, type TemaId } from './lib/tema';
 import type { ScalaPlusMinus } from './lib/grades';
@@ -102,8 +102,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const salvaESnapshot = useCallback(async (fn: () => Promise<unknown>) => {
     await fn();
-    await scattaSnapshotAutomatico();
     await ricarica();
+    programmaSnapshot();
   }, [ricarica]);
 
   const completaOnboarding: Store['completaOnboarding'] = useCallback(async (args) => {
@@ -135,16 +135,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         updatedAt: Date.now(),
       });
     });
-    await scattaSnapshotAutomatico();
     await ricarica();
+    programmaSnapshot();
   }, [ricarica]);
 
   const aggiornaProfilo = useCallback(async (patch: Partial<Profile>) => {
     const p = await db.profile.get('main');
     if (!p) return;
     await db.profile.put({ ...p, ...patch, updatedAt: Date.now() });
-    await scattaSnapshotAutomatico();
     await ricarica();
+    programmaSnapshot();
   }, [ricarica]);
 
   const aggiungiMateria = useCallback(async (nome: string) => {
@@ -253,7 +253,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     await db.transaction('rw', db.profile, db.anni, db.materie, db.voti, async () => {
       await Promise.all([db.profile.clear(), db.anni.clear(), db.materie.clear(), db.voti.clear()]);
     });
-    localStorage.removeItem('medie-snapshots-v1');
+    cancellaSnapshots();
     await ricarica();
   }, [ricarica]);
 

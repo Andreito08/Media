@@ -74,6 +74,9 @@ export function GlobalFx() {
     window.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', clearPressed);
+    // Il browser emette pointercancel quando il tocco diventa uno scroll:
+    // il bottone si sgonfia subito invece di restare ingrandito mentre si scorre.
+    window.addEventListener('pointercancel', clearPressed);
     window.addEventListener('touchmove', onTouchFollow, { passive: true });
     window.addEventListener('touchend', clearPressed);
 
@@ -174,6 +177,7 @@ export function GlobalFx() {
       window.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', clearPressed);
+      window.removeEventListener('pointercancel', clearPressed);
       window.removeEventListener('touchmove', onTouchFollow);
       window.removeEventListener('touchend', clearPressed);
       window.removeEventListener('touchstart', onTouchStart);

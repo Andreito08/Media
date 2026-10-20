@@ -11,10 +11,10 @@ function etichettaPeriodo(p: Periodo, tipo: string): string {
 }
 
 const TIPO_META: Record<TipoVoto, { label: string; cls: string }> = {
-  orale: { label: 'Orale', cls: 'bg-sky-100 text-sky-700' },
-  scritto: { label: 'Scritto', cls: 'bg-blue-100 text-blue-700' },
-  pratico: { label: 'Pratico', cls: 'bg-teal-100 text-teal-700' },
-  verifica: { label: 'Verifica', cls: 'bg-orange-100 text-orange-700' },
+  orale: { label: 'Orale', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-400/15 dark:text-sky-200' },
+  scritto: { label: 'Scritto', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-400/15 dark:text-blue-200' },
+  pratico: { label: 'Pratico', cls: 'bg-teal-100 text-teal-700 dark:bg-teal-400/15 dark:text-teal-200' },
+  verifica: { label: 'Verifica', cls: 'bg-orange-100 text-orange-700 dark:bg-orange-400/15 dark:text-orange-200' },
 };
 
 export function SezioneMaterie() {
@@ -125,11 +125,11 @@ export function SezioneMaterie() {
                   <MiniAction onClick={() => toggleNascondiMateria(m.id)}><IconEye /> Nascondi</MiniAction>
                   {confermaElimina === m.id ? (
                     <>
-                      <button className="press rounded-full bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-rose-200" onClick={() => eliminaMateria(m.id)}>Conferma elimina + voti</button>
+                      <button className="press rounded-full bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-rose-200 dark:shadow-none" onClick={() => eliminaMateria(m.id)}>Conferma elimina + voti</button>
                       <MiniAction onClick={() => setConfermaElimina(null)}>Annulla</MiniAction>
                     </>
                   ) : (
-                    <button className="press rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100" onClick={() => setConfermaElimina(m.id)}>Elimina</button>
+                    <button className="press rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/20 dark:hover:bg-rose-500/15" onClick={() => setConfermaElimina(m.id)}>Elimina</button>
                   )}
                 </div>
 
@@ -165,7 +165,7 @@ export function SezioneMaterie() {
                     <input className={inputCls} placeholder="Nota (es. interrogazione cap. 3)" value={nota} onChange={(e) => setNota(e.target.value)} />
                     <Btn onClick={() => salvaVoto(m.id)}>Salva voto</Btn>
                   </div>
-                  {errore && <p className="animate-pop-in mt-2 rounded-xl bg-rose-50 px-3 py-2 text-[13px] font-bold text-rose-600 ring-1 ring-rose-200">{errore}</p>}
+                  {errore && <p className="animate-pop-in mt-2 rounded-xl bg-rose-50 px-3 py-2 text-[13px] font-bold text-rose-600 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/20">{errore}</p>}
                 </div>
 
                 {vv.length === 0 ? (
@@ -174,7 +174,7 @@ export function SezioneMaterie() {
                   <ul className="stagger space-y-1.5">
                     {vv.map((v) => (
                       <li key={v.id} className="press flex items-center gap-3 rounded-2xl border border-white/60 bg-white/60 px-3 py-2.5 backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-                        <span className="w-14 shrink-0 rounded-full bg-gradient-to-br from-[#101f38] to-[#1e3a5f] px-2 py-1.5 text-center text-sm font-black tabular-nums text-white" title={`Vale ${formatMedia(v.valore)}`}>
+                        <span className="acc-chip w-14 shrink-0 rounded-full px-2 py-1.5 text-center text-sm font-black tabular-nums" title={`Vale ${formatMedia(v.valore)}`}>
                           {v.input}
                         </span>
                         <span className="min-w-0 flex-1">
