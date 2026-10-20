@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
 import { useStore } from '../store';
@@ -161,10 +161,47 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 export const inputCls =
   'input-liquid w-full rounded-full border px-4 py-2.5 text-[15px] font-medium placeholder:font-normal placeholder:text-slate-400';
 
-// ---------------- Scelta (tendina liquid glass) ----------------
+// ---------------- Scelta (tendina) ----------------
+
+type SceltaProps<T extends string> = {
+  value: T; onChange: (v: T) => void; opzioni: { value: T; label: string }[]; className?: string; ariaLabel?: string;
+};
+
+// Touch (telefono/tablet): <select> nativa, che apre l'elenco di sistema
+// (lista Android, rotella iOS): più comodo col dito e senza lavoro in JS.
+// Con mouse (PC) resta il pannello liquid glass.
+const TOUCH_QUERY = '(pointer: coarse)';
+
+function iscrivitiTouch(fn: () => void) {
+  const mq = window.matchMedia?.(TOUCH_QUERY);
+  mq?.addEventListener('change', fn);
+  return () => mq?.removeEventListener('change', fn);
+}
+
+const leggiTouch = () => window.matchMedia?.(TOUCH_QUERY).matches ?? false;
+
+export function Scelta<T extends string>(props: SceltaProps<T>) {
+  const touch = useSyncExternalStore(iscrivitiTouch, leggiTouch);
+  return touch ? <SceltaNativa {...props} /> : <SceltaVetro {...props} />;
+}
+
+function SceltaNativa<T extends string>({ value, onChange, opzioni, className = '', ariaLabel }: SceltaProps<T>) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as T)}
+      aria-label={ariaLabel}
+      className={`${inputCls} ${className}`}
+    >
+      {opzioni.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
+  );
+}
 
 /**
- * Tendina uguale su ogni browser (le <select> native aprono il menu di sistema).
+ * Tendina liquid glass per PC, uguale su ogni browser.
  * Popover nativo: sta sopra tutto, si chiude con Esc o toccando fuori,
  * e il focus torna al bottone. Il pannello è in un portal per non finire
  * dentro <label> o card con overflow nascosto.
@@ -188,11 +225,7 @@ function posiziona(btn: HTMLElement | null, panel: HTMLElement | null): boolean 
   return true;
 }
 
-export function Scelta<T extends string>({
-  value, onChange, opzioni, className = '', ariaLabel,
-}: {
-  value: T; onChange: (v: T) => void; opzioni: { value: T; label: string }[]; className?: string; ariaLabel?: string;
-}) {
+function SceltaVetro<T extends string>({ value, onChange, opzioni, className = '', ariaLabel }: SceltaProps<T>) {
   const id = useId();
   const btnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);

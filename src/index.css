@@ -278,7 +278,25 @@ button {
 }
 
 /* ============ Tendine (componente Scelta) ============
-   Pannello liquid glass uguale su ogni browser, al posto del menu di sistema. */
+   Touch: <select> nativa, chiusa è la stessa pillola di vetro degli input
+   (freccia uguale a quella del PC), aperta è l'elenco di sistema. */
+select.input-liquid {
+  appearance: none;
+  padding-right: 2.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  cursor: pointer;
+  /* una riga sola anche nelle colonne strette (es. "1° Quadrimestre"),
+     tagliata prima della freccia */
+  white-space: nowrap;
+  overflow: clip;
+  overflow-clip-margin: content-box;
+  text-overflow: ellipsis;
+}
+
+/* PC: pannello liquid glass uguale su ogni browser, al posto del menu di sistema. */
 .scelta-panel {
   position: fixed;
   inset: auto;
