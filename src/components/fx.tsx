@@ -127,7 +127,6 @@ export function GlobalFx() {
     let moveEl: HTMLElement | null = null;
     let bounceTimer = 0;
     let layerTimer = 0;
-    const lastKick = new WeakMap<HTMLElement, number>(); // ultimo rimbalzo per elemento
 
     const rootOf = () => document.getElementById('app-root');
 
@@ -238,7 +237,6 @@ export function GlobalFx() {
       // non tirato, o riportato indietro a mano: è già al suo posto
       if (!engaged) return;
       engaged = false;
-      lastKick.set(el, performance.now());
       el.classList.add('bounce-back');
       el.style.transform = '';
       bounceTimer = window.setTimeout(() => el.classList.remove('bounce-back'), 600);
@@ -246,24 +244,29 @@ export function GlobalFx() {
 
     // Colpetto: il contenuto arriva lanciato al bordo (o la rotella ci spinge
     // contro) e rimbalza da solo, senza dito. Web Animations: non tocca lo
-    // style inline usato dal trascinamento.
+    // style inline usato dal trascinamento. Un colpetto nuovo interrompe
+    // quello in corso: ogni arrivo al bordo risponde, come fa la barra.
+    const kickAnim = new WeakMap<HTMLElement, Animation>();
     const kick = (el: HTMLElement, verso: 1 | -1, forza: number) => {
-      const now = performance.now();
-      if (now - (lastKick.get(el) ?? 0) < 450 || engaged) return;
-      lastKick.set(el, now);
+      if (engaged) return;
+      kickAnim.get(el)?.cancel();
       const d = verso * Math.min(34, Math.max(10, forza));
-      el.animate(
+      kickAnim.set(el, el.animate(
         [
           { transform: 'translateY(0)' },
           { transform: `translateY(${d}px)`, offset: 0.3 },
           { transform: 'translateY(0)' },
         ],
         { duration: 520, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
-      );
+      ));
     };
 
-    // Arrivo lanciato al bordo: velocità dall'ultimo evento di scroll
+    // Arrivo lanciato al bordo: velocità dall'ultimo evento di scroll. Si
+    // risponde solo al passaggio dentro il bordo (come la barra): così un
+    // fling ripetuto subito dopo riparte, e durante un solo fling non si
+    // accumulano rimbalzi.
     const ultimo = new WeakMap<object, { pos: number; t: number }>();
+    const alBordo = new WeakMap<object, 'top' | 'bottom' | null>();
     const onScrollAny = (e: Event) => {
       if (calma || tracking) return;
       const panel = e.target instanceof HTMLElement && e.target.matches('.modal-scroll, .scelta-scroll') ? e.target : null;
@@ -274,11 +277,14 @@ export function GlobalFx() {
       const now = performance.now();
       const prima = ultimo.get(el);
       ultimo.set(el, { pos, t: now });
-      if (!prima || now - prima.t > 100) return;
-      const v = (pos - prima.pos) / Math.max(1, now - prima.t); // px/ms
       const m = metrics(panel);
-      if (m.top && v < -0.6) kick(el, 1, -v * 14);
-      else if (m.bottom && v > 0.6) kick(el, -1, v * 14);
+      const ora = m.top ? 'top' : m.bottom ? 'bottom' : null;
+      const era = alBordo.get(el) ?? null;
+      alBordo.set(el, ora);
+      if (ora === era || !ora || !prima || now - prima.t > 100) return;
+      const v = (pos - prima.pos) / Math.max(1, now - prima.t); // px/ms
+      if (ora === 'top' && v < -0.6) kick(el, 1, -v * 14);
+      else if (ora === 'bottom' && v > 0.6) kick(el, -1, v * 14);
     };
 
     // Rotella o trackpad contro un bordo già raggiunto: un rimbalzo per spinta,
