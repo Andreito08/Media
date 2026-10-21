@@ -88,6 +88,7 @@ export function GlobalFx() {
     let anchorY = 0; // ultima posizione del dito dentro la zona scorrevole
     let raf = 0;
     let moveEl: HTMLElement | null = null;
+    let bounceTimer = 0;
     const lastKick = new WeakMap<HTMLElement, number>(); // ultimo rimbalzo per elemento
 
     const rootOf = () => document.getElementById('app-root');
@@ -124,6 +125,10 @@ export function GlobalFx() {
       tracking = true;
       engaged = false;
       anchorY = e.touches[0].clientY;
+      // un rimbalzo ancora in corso si ferma qui: il suo timer non deve togliere
+      // il livello a metà di questo gesto (lo toglie il touchend)
+      clearTimeout(bounceTimer);
+      moveEl?.classList.remove('bounce-back');
       moveEl = panel ?? rootOf();
       moveEl?.classList.remove('bounce-back');
     };
@@ -147,6 +152,7 @@ export function GlobalFx() {
         }
         return;
       }
+      if (!engaged) el.classList.add('is-elastic');
       engaged = true;
       moveEl = el;
       const off = gomma(y - anchorY, panel ? panel.clientHeight : window.innerHeight);
@@ -159,14 +165,18 @@ export function GlobalFx() {
     const onTouchEnd = () => {
       tracking = false;
       cancelAnimationFrame(raf);
-      if (!engaged) return;
-      engaged = false;
       const el = moveEl;
       if (!el) return;
+      if (!engaged) {
+        // tirato e poi riportato indietro a mano: è già al suo posto
+        el.classList.remove('is-elastic');
+        return;
+      }
+      engaged = false;
       lastKick.set(el, performance.now());
       el.classList.add('bounce-back');
       el.style.transform = '';
-      window.setTimeout(() => el.classList.remove('bounce-back'), 600);
+      bounceTimer = window.setTimeout(() => el.classList.remove('bounce-back', 'is-elastic'), 600);
     };
 
     // Colpetto: il contenuto arriva lanciato al bordo (o la rotella ci spinge
@@ -244,6 +254,7 @@ export function GlobalFx() {
       window.removeEventListener('touchcancel', onTouchEnd);
       window.removeEventListener('scroll', onScrollAny, { capture: true });
       window.removeEventListener('wheel', onWheel);
+      clearTimeout(bounceTimer);
       cancelAnimationFrame(raf);
       cancelAnimationFrame(spotRaf);
     };
