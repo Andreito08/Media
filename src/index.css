@@ -324,7 +324,7 @@ select.input-liquid {
   min-height: 0;
   flex: 1 1 auto;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
   padding: 0.35rem calc(0.35rem + 24px) 0.35rem 0.35rem;
 }
 
@@ -409,6 +409,8 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Niente rimbalzo (iOS) o stiramento (Android) del browser ai bordi:
+   lo fa GlobalFx, uguale ovunque, e non si somma a quello di sistema */
 html,
 body {
   overscroll-behavior-y: none;
@@ -527,7 +529,7 @@ button:active::after {
 .modal-scroll {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
   touch-action: pan-y;
 }
 

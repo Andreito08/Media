@@ -3,14 +3,10 @@ import { useEffect } from 'react';
 /**
  * Effetti stile iOS:
  * 1. Tocco -> l'oggetto premuto si ingrandisce e si retroillumina nel punto esatto del dito.
- * 2. Rimbalzo elastico quando si tira oltre la cima o il fondo della pagina.
+ * 2. Rimbalzo elastico quando si tira oltre la cima o il fondo (pagina, pop-up, tendine).
  */
 export function GlobalFx() {
   useEffect(() => {
-    // Su telefono lo scroll resta nativo (fluido): niente rimbalzo custom,
-    // spotlight del tocco alleggerito. Su PC tutto invariato.
-    const touchUi = window.matchMedia?.('(pointer: coarse), (max-width: 768px)').matches ?? false;
-
     // ---------- 1. spotlight nel punto del tocco ----------
     let pressedEl: HTMLElement | null = null;
     let spotRaf = 0;
@@ -80,22 +76,24 @@ export function GlobalFx() {
     window.addEventListener('touchmove', onTouchFollow, { passive: true });
     window.addEventListener('touchend', clearPressed);
 
-    // ---------- 2. rimbalzo elastico ai bordi (solo PC: su telefono c'è quello nativo) ----------
-    // Regole per non litigare col browser:
-    // - si ingaggia solo se il tocco PARTE a riposo su un bordo (niente fling in corso)
-    // - mai preventDefault se l'evento non è cancellabile (niente errori in console)
-    let startY = 0;
+    // ---------- 2. rimbalzo elastico ai bordi, come su iPhone / WhatsApp ----------
+    // Il contenuto (pagina, pop-up, tendine) segue il dito oltre la cima o il
+    // fondo con resistenza crescente, e torna al suo posto con un rimbalzo.
+    // Il rimbalzo del browser è spento in CSS (overscroll-behavior: none), così
+    // l'effetto è uguale su iPhone, Android e PC e i listener restano passivi:
+    // mai preventDefault, lo scorrimento non aspetta mai questo codice.
+    const calma = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     let tracking = false;
     let engaged = false;
-    let startedAtEdge = false;
+    let anchorY = 0; // ultima posizione del dito dentro la zona scorrevole
     let raf = 0;
     let moveEl: HTMLElement | null = null;
-    const MAX_PULL = 110;
+    const lastKick = new WeakMap<HTMLElement, number>(); // ultimo rimbalzo per elemento
 
     const rootOf = () => document.getElementById('app-root');
 
-    const panelOf = (e: TouchEvent) =>
-      (e.target as HTMLElement | null)?.closest?.('.modal-scroll') as HTMLElement | null;
+    const panelOf = (t: EventTarget | null) =>
+      (t as HTMLElement | null)?.closest?.('.modal-scroll, .scelta-scroll') as HTMLElement | null;
 
     const metrics = (panel: HTMLElement | null) => {
       if (!panel) {
@@ -108,12 +106,16 @@ export function GlobalFx() {
 
     const modalOpen = () => document.body.style.overflow === 'hidden';
 
+    // Gomma alla iOS: più si tira, più si fa dura (mai un muro netto)
+    const gomma = (dy: number, alto: number) =>
+      Math.sign(dy) * (1 - 1 / ((Math.abs(dy) * 0.55) / alto + 1)) * alto;
+
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) {
+      if (calma || e.touches.length !== 1) {
         tracking = false;
         return;
       }
-      const panel = panelOf(e);
+      const panel = panelOf(e.target);
       // modale aperto ma tocco fuori dal pannello: lascia fare al modale
       if (modalOpen() && !panel) {
         tracking = false;
@@ -121,37 +123,37 @@ export function GlobalFx() {
       }
       tracking = true;
       engaged = false;
-      startY = e.touches[0].clientY;
+      anchorY = e.touches[0].clientY;
       moveEl = panel ?? rootOf();
       moveEl?.classList.remove('bounce-back');
-      const m = metrics(panel);
-      startedAtEdge = m.top || m.bottom;
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!tracking || !e.cancelable) return;
-      const panel = panelOf(e);
+      if (!tracking || e.touches.length !== 1) return;
+      const panel = panelOf(e.target);
       const el = panel ?? rootOf();
       if (!el) return;
-      const dy = e.touches[0].clientY - startY;
-      if (Math.abs(dy) <= 8) return;
+      const y = e.touches[0].clientY;
       const m = metrics(panel);
-      const pastTop = dy > 0 && m.top;
-      const pastBottom = dy < 0 && m.bottom;
-      if ((pastTop || pastBottom) && startedAtEdge) {
-        engaged = true;
-        moveEl = el;
-        e.preventDefault();
-        const damped = Math.sign(dy) * Math.min(MAX_PULL, Math.abs(dy) * 0.42);
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(() => {
-          el.style.transform = `translateY(${damped}px)`;
-        });
-      } else if (engaged) {
-        // rientrato nella zona scrollabile: molla la presa
-        engaged = false;
-        if (moveEl) moveEl.style.transform = '';
+      const oltre = (m.top && y > anchorY) || (m.bottom && y < anchorY);
+      if (!oltre) {
+        // si scorre normalmente: l'ancora segue il dito, così l'effetto parte
+        // anche quando il bordo si raggiunge a metà del trascinamento
+        anchorY = y;
+        if (engaged) {
+          engaged = false;
+          cancelAnimationFrame(raf);
+          el.style.transform = '';
+        }
+        return;
       }
+      engaged = true;
+      moveEl = el;
+      const off = gomma(y - anchorY, panel ? panel.clientHeight : window.innerHeight);
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        el.style.transform = `translateY(${off}px)`;
+      });
     };
 
     const onTouchEnd = () => {
@@ -161,17 +163,73 @@ export function GlobalFx() {
       engaged = false;
       const el = moveEl;
       if (!el) return;
+      lastKick.set(el, performance.now());
       el.classList.add('bounce-back');
       el.style.transform = '';
       window.setTimeout(() => el.classList.remove('bounce-back'), 600);
     };
 
-    if (!touchUi) {
-      window.addEventListener('touchstart', onTouchStart, { passive: true });
-      window.addEventListener('touchmove', onTouchMove, { passive: false });
-      window.addEventListener('touchend', onTouchEnd);
-      window.addEventListener('touchcancel', onTouchEnd);
-    }
+    // Colpetto: il contenuto arriva lanciato al bordo (o la rotella ci spinge
+    // contro) e rimbalza da solo, senza dito. Web Animations: non tocca lo
+    // style inline usato dal trascinamento.
+    const kick = (el: HTMLElement, verso: 1 | -1, forza: number) => {
+      const now = performance.now();
+      if (now - (lastKick.get(el) ?? 0) < 450 || engaged) return;
+      lastKick.set(el, now);
+      const d = verso * Math.min(34, Math.max(10, forza));
+      el.animate(
+        [
+          { transform: 'translateY(0)' },
+          { transform: `translateY(${d}px)`, offset: 0.3 },
+          { transform: 'translateY(0)' },
+        ],
+        { duration: 520, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' },
+      );
+    };
+
+    // Arrivo lanciato al bordo: velocità dall'ultimo evento di scroll
+    const ultimo = new WeakMap<object, { pos: number; t: number }>();
+    const onScrollAny = (e: Event) => {
+      if (calma || tracking) return;
+      const panel = e.target instanceof HTMLElement && e.target.matches('.modal-scroll, .scelta-scroll') ? e.target : null;
+      if (!panel && e.target !== document) return;
+      const el = panel ?? rootOf();
+      if (!el) return;
+      const pos = panel ? panel.scrollTop : window.scrollY;
+      const now = performance.now();
+      const prima = ultimo.get(el);
+      ultimo.set(el, { pos, t: now });
+      if (!prima || now - prima.t > 100) return;
+      const v = (pos - prima.pos) / Math.max(1, now - prima.t); // px/ms
+      const m = metrics(panel);
+      if (m.top && v < -0.6) kick(el, 1, -v * 14);
+      else if (m.bottom && v > 0.6) kick(el, -1, v * 14);
+    };
+
+    // Rotella o trackpad contro un bordo già raggiunto: un rimbalzo per spinta,
+    // non uno ogni scatto (scatti e inerzia del trackpad arrivano a raffica)
+    let lastWheel = 0;
+    const onWheel = (e: WheelEvent) => {
+      const now = performance.now();
+      const nuovaSpinta = now - lastWheel > 300;
+      lastWheel = now;
+      if (!nuovaSpinta || calma || e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      const panel = panelOf(e.target);
+      if (modalOpen() && !panel) return;
+      const el = panel ?? rootOf();
+      if (!el) return;
+      const m = metrics(panel);
+      const forza = Math.abs(e.deltaY) * (e.deltaMode === 1 ? 16 : 1) * 0.25;
+      if (m.top && e.deltaY < 0) kick(el, 1, forza);
+      else if (m.bottom && e.deltaY > 0) kick(el, -1, forza);
+    };
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('touchcancel', onTouchEnd);
+    window.addEventListener('scroll', onScrollAny, { passive: true, capture: true });
+    window.addEventListener('wheel', onWheel, { passive: true });
 
     return () => {
       window.removeEventListener('pointerdown', onDown);
@@ -184,6 +242,8 @@ export function GlobalFx() {
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
+      window.removeEventListener('scroll', onScrollAny, { capture: true });
+      window.removeEventListener('wheel', onWheel);
       cancelAnimationFrame(raf);
       cancelAnimationFrame(spotRaf);
     };
