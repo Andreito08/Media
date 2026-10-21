@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
 import { Btn, Card, Field, Scelta, IconGear, IconUser, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
@@ -148,7 +149,9 @@ export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChi
 
   if (!aperto) return null;
 
-  return (
+  // Portal su body: fuori da #app-root, che durante il rimbalzo elastico
+  // diventa un livello (will-change) e farebbe da riferimento ai fixed
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/45 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center"
       onClick={onChiudi}
@@ -183,6 +186,7 @@ export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChi
         </div>
         <LiquidScrollbar target={scrollRef} />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
