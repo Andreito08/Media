@@ -517,6 +517,12 @@ button:active::after {
    rientrata dagli angoli così non esce mai dal bordo del pop-up. */
 .scroll-liquid {
   scrollbar-width: none;
+  /* Il pannello che scorre sborda di 24px a destra (fuori dal vetro, che
+     taglia): qualunque barra di sistema che il browser disegna comunque,
+     come la barretta di iOS mentre si scorre, finisce lì e non si vede.
+     Il padding riporta il contenuto al suo posto. */
+  margin-right: -24px;
+  padding-right: 24px;
 }
 
 .scroll-liquid::-webkit-scrollbar {
@@ -568,21 +574,19 @@ button:active::after {
   cursor: grabbing;
 }
 
-/* La goccia di vetro: tinta blu traslucida con una lucentezza laterale
-   sfumata su tutta la lunghezza (niente riflessi o contorni separati,
-   che sembravano una seconda barretta dentro la prima) */
+/* La goccia di vetro: solo tinta blu traslucida. Niente bianco dentro
+   (riflessi, contorni, lucentezze): sembrava una seconda barretta. */
 .lsb-glass {
   --lsb-tinta: linear-gradient(
     180deg,
     color-mix(in srgb, var(--acc-deep) 62%, transparent),
     color-mix(in srgb, var(--acc) 52%, transparent)
   );
-  --lsb-luce: linear-gradient(90deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 70%);
   position: relative;
   width: 5px;
   height: 100%;
   border-radius: 99px;
-  background: var(--lsb-luce), var(--lsb-tinta);
+  background: var(--lsb-tinta);
   -webkit-backdrop-filter: blur(10px) saturate(1.8);
   backdrop-filter: blur(10px) saturate(1.8);
   box-shadow: 0 2px 8px -3px rgba(30, 58, 138, 0.45);
@@ -606,7 +610,6 @@ button:active::after {
 
 .dark .lsb-glass {
   --lsb-tinta: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(191, 219, 254, 0.32));
-  --lsb-luce: linear-gradient(90deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 70%);
   box-shadow: 0 2px 8px -3px rgba(0, 0, 0, 0.6);
 }
 

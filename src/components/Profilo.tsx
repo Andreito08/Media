@@ -161,22 +161,24 @@ export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChi
         onClick={(e) => e.stopPropagation()}
       >
         {/* Scorre il contenuto, non il vetro: la barra resta dentro gli angoli */}
-        <div ref={scrollRef} className="modal-scroll scroll-liquid max-h-[88vh] p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <SectionTitle icon={<IconGear className="h-4 w-4" />} title="Impostazioni" sub="Profilo, aspetto, backup e anni" />
-            <button
-              onClick={onChiudi}
-              aria-label="Chiudi impostazioni"
-              className="btn-liquid-ghost press press-grow flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            >
-              <IconX className="h-4 w-4" />
-            </button>
-          </div>
+        <div ref={scrollRef} className="modal-scroll scroll-liquid max-h-[88vh]">
+          <div className="p-4 sm:p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <SectionTitle icon={<IconGear className="h-4 w-4" />} title="Impostazioni" sub="Profilo, aspetto, backup e anni" />
+              <button
+                onClick={onChiudi}
+                aria-label="Chiudi impostazioni"
+                className="btn-liquid-ghost press press-grow flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+            </div>
 
-          <div className="space-y-4">
-            <ProfiloForm />
-            <SezioneImpostazioni />
-            <Btn onClick={onChiudi} className="w-full">Fatto</Btn>
+            <div className="space-y-4">
+              <ProfiloForm />
+              <SezioneImpostazioni />
+              <Btn onClick={onChiudi} className="w-full">Fatto</Btn>
+            </div>
           </div>
         </div>
         <LiquidScrollbar target={scrollRef} />
