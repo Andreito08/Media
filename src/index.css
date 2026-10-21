@@ -521,6 +521,8 @@ button:active::after {
 
 .scroll-liquid::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 
 .lsb-track {
@@ -566,42 +568,29 @@ button:active::after {
   cursor: grabbing;
 }
 
-/* La goccia di vetro: tinta blu traslucida, riflesso in alto, bordo luminoso */
+/* La goccia di vetro: tinta blu traslucida con una lucentezza laterale
+   sfumata su tutta la lunghezza (niente riflessi o contorni separati,
+   che sembravano una seconda barretta dentro la prima) */
 .lsb-glass {
-  position: relative;
-  width: 5px;
-  height: 100%;
-  border-radius: 99px;
-  background: linear-gradient(
+  --lsb-tinta: linear-gradient(
     180deg,
     color-mix(in srgb, var(--acc-deep) 62%, transparent),
     color-mix(in srgb, var(--acc) 52%, transparent)
   );
+  --lsb-luce: linear-gradient(90deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 70%);
+  position: relative;
+  width: 5px;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--lsb-luce), var(--lsb-tinta);
   -webkit-backdrop-filter: blur(10px) saturate(1.8);
   backdrop-filter: blur(10px) saturate(1.8);
-  box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.55),
-    0 3px 10px -3px rgba(30, 58, 138, 0.45),
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.8),
-    inset 0 -1px 0.5px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 8px -3px rgba(30, 58, 138, 0.45);
   transform-origin: 50% 0;
   transition:
     width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
     background 0.3s ease,
     box-shadow 0.3s ease;
-}
-
-/* Riflesso speculare che corre lungo la goccia */
-.lsb-glass::before {
-  content: "";
-  position: absolute;
-  top: 3px;
-  bottom: 40%;
-  left: 18%;
-  width: 34%;
-  border-radius: 99px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
-  pointer-events: none;
 }
 
 /* Bagliore che si accende quando tocca un bordo */
@@ -616,12 +605,9 @@ button:active::after {
 }
 
 .dark .lsb-glass {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(191, 219, 254, 0.32));
-  box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.25),
-    0 3px 10px -3px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.7),
-    inset 0 -1px 0.5px rgba(255, 255, 255, 0.15);
+  --lsb-tinta: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(191, 219, 254, 0.32));
+  --lsb-luce: linear-gradient(90deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 70%);
+  box-shadow: 0 2px 8px -3px rgba(0, 0, 0, 0.6);
 }
 
 .dark .lsb-glass::after {
@@ -636,7 +622,7 @@ button:active::after {
 .lsb-track:hover .lsb-glass,
 .lsb-track.is-dragging .lsb-glass {
   width: 8px;
-  background: linear-gradient(
+  --lsb-tinta: linear-gradient(
     180deg,
     color-mix(in srgb, var(--acc-deep) 80%, transparent),
     color-mix(in srgb, var(--acc) 70%, transparent)
@@ -645,7 +631,7 @@ button:active::after {
 
 .dark .lsb-track:hover .lsb-glass,
 .dark .lsb-track.is-dragging .lsb-glass {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(191, 219, 254, 0.5));
+  --lsb-tinta: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(191, 219, 254, 0.5));
 }
 
 /* Comparsa all'apertura: la goccia scende e si distende */
