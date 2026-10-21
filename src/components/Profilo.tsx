@@ -3,6 +3,7 @@ import { useStore } from '../store';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
 import { Btn, Card, Field, Scelta, IconGear, IconUser, IconX, SectionTitle, inputCls, numDecProps, soloNumeriDecimali } from './ui';
 import { SezioneImpostazioni } from './Impostazioni';
+import { LiquidScrollbar } from './LiquidScrollbar';
 
 /** Form profilo e scuola (le stesse scelte del primo avvio). */
 function ProfiloForm() {
@@ -130,6 +131,7 @@ function ProfiloForm() {
 
 /** Finestra unica delle impostazioni: profilo + aspetto + backup + anni. */
 export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChiudi: () => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   // mentre la finestra è aperta, la pagina dietro resta ferma
   useEffect(() => {
     if (!aperto) return;
@@ -155,25 +157,29 @@ export function ImpostazioniModal({ aperto, onChiudi }: { aperto: boolean; onChi
       aria-label="Impostazioni"
     >
       <div
-        className="sheet glass glass-sheen animate-pop-in modal-scroll max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-[1.75rem] p-4 sm:p-5"
+        className="sheet glass glass-sheen animate-pop-in w-full max-w-lg rounded-[1.75rem]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <SectionTitle icon={<IconGear className="h-4 w-4" />} title="Impostazioni" sub="Profilo, aspetto, backup e anni" />
-          <button
-            onClick={onChiudi}
-            aria-label="Chiudi impostazioni"
-            className="btn-liquid-ghost press press-grow flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-          >
-            <IconX className="h-4 w-4" />
-          </button>
-        </div>
+        {/* Scorre il contenuto, non il vetro: la barra resta dentro gli angoli */}
+        <div ref={scrollRef} className="modal-scroll scroll-liquid max-h-[88vh] p-4 sm:p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <SectionTitle icon={<IconGear className="h-4 w-4" />} title="Impostazioni" sub="Profilo, aspetto, backup e anni" />
+            <button
+              onClick={onChiudi}
+              aria-label="Chiudi impostazioni"
+              className="btn-liquid-ghost press press-grow flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <IconX className="h-4 w-4" />
+            </button>
+          </div>
 
-        <div className="space-y-4">
-          <ProfiloForm />
-          <SezioneImpostazioni />
-          <Btn onClick={onChiudi} className="w-full">Fatto</Btn>
+          <div className="space-y-4">
+            <ProfiloForm />
+            <SezioneImpostazioni />
+            <Btn onClick={onChiudi} className="w-full">Fatto</Btn>
+          </div>
         </div>
+        <LiquidScrollbar target={scrollRef} />
       </div>
     </div>
   );
