@@ -524,10 +524,10 @@ button:active::after {
   transition: transform 0.55s cubic-bezier(0.2, 1.35, 0.32, 1);
 }
 
-/* Durante il gesto il contenitore che si muove sta su un livello suo: il
-   telefono sposta un'immagine già pronta invece di ridipingere tutta la
-   pagina a ogni fotogramma. Solo durante il gesto: un livello permanente su
-   #app-root sposterebbe anche il pop-up (position: fixed) che ci sta dentro. */
+/* Durante il gesto (e per poco dopo, per i tiri ripetuti) il contenitore che
+   si muove sta su un livello suo: il telefono sposta un'immagine già pronta
+   invece di ridipingere tutta la pagina a ogni fotogramma. Non permanente:
+   un livello grande quanto la pagina costa memoria al telefono. */
 .is-elastic {
   will-change: transform;
 }
