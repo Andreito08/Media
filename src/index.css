@@ -524,6 +524,22 @@ button:active::after {
   transition: transform 0.55s cubic-bezier(0.2, 1.35, 0.32, 1);
 }
 
+/* Durante il gesto il contenitore che si muove sta su un livello suo: il
+   telefono sposta un'immagine già pronta invece di ridipingere tutta la
+   pagina a ogni fotogramma. Solo durante il gesto: un livello permanente su
+   #app-root sposterebbe anche il pop-up (position: fixed) che ci sta dentro. */
+.is-elastic {
+  will-change: transform;
+}
+
+/* La pagina tirata oltre il bordo non deve allungare il documento: se no a
+   ogni fotogramma il browser rifà layout e ridipinge l'intero documento.
+   clip (non hidden) non crea un contenitore di scorrimento: l'intestazione
+   sticky continua a funzionare. */
+#root {
+  overflow-y: clip;
+}
+
 /* Pannello scorrevole del modale: deve vincere su .glass-sheen (overflow hidden).
    Regola non-layered e dichiarata dopo, a pari specificità. */
 .modal-scroll {
