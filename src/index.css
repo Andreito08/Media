@@ -301,9 +301,9 @@ select.input-liquid {
   position: fixed;
   inset: auto;
   margin: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 0.35rem;
+  /* scorre la lista interna (.scelta-scroll): il vetro taglia la barra di sistema */
+  overflow: hidden;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 1.25rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.66));
@@ -313,6 +313,25 @@ select.input-liquid {
     0 18px 44px -14px rgba(31, 38, 135, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.85);
   color: #1e293b;
+}
+
+.scelta-panel:popover-open {
+  display: flex;
+  flex-direction: column;
+}
+
+.scelta-scroll.scroll-liquid {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.35rem calc(0.35rem + 24px) 0.35rem 0.35rem;
+}
+
+.scelta-panel .lsb-track {
+  top: 12px;
+  bottom: 12px;
+  right: 2px;
 }
 
 .dark .scelta-panel {
@@ -531,6 +550,25 @@ button:active::after {
   height: 0;
 }
 
+/* Pagina intera: niente barra di sistema, c'è la barra liquid glass fissa */
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.lsb-track.lsb-pagina {
+  position: fixed;
+  z-index: 30;
+  top: calc(env(safe-area-inset-top) + 12px);
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  right: 3px;
+}
+
 .lsb-track {
   position: absolute;
   z-index: 2;
@@ -543,7 +581,18 @@ button:active::after {
   transition:
     opacity 0.45s ease,
     transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-  touch-action: none;
+}
+
+/* Col dito la striscia non deve rubare lo scorrimento né i tocchi sul bordo:
+   si afferra solo il cursore, e solo quando si vede */
+@media (pointer: coarse) {
+  .lsb-track {
+    pointer-events: none;
+  }
+
+  .lsb-track.is-visible .lsb-thumb {
+    pointer-events: auto;
+  }
 }
 
 .lsb-track.is-off {
@@ -568,6 +617,7 @@ button:active::after {
   padding-right: 1px;
   will-change: transform;
   cursor: grab;
+  touch-action: none;
 }
 
 .lsb-track.is-dragging .lsb-thumb {
@@ -671,7 +721,8 @@ button:active::after {
 }
 
 .lsb-glass.hit-top::after,
-.lsb-glass.hit-bottom::after {
+.lsb-glass.hit-bottom::after,
+.lsb-glass.is-glow::after {
   animation: lsb-glow 0.7s ease-out;
 }
 

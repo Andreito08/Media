@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } fro
 import { createPortal } from 'react-dom';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
 import { useStore } from '../store';
+import { LiquidScrollbar } from './LiquidScrollbar';
 
 // ---------------- Icone SVG (niente emoji, stile coerente) ----------------
 
@@ -229,6 +230,7 @@ function SceltaVetro<T extends string>({ value, onChange, opzioni, className = '
   const id = useId();
   const btnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [aperto, setAperto] = useState(false);
   const corrente = opzioni.find((o) => o.value === value);
 
@@ -291,18 +293,22 @@ function SceltaVetro<T extends string>({ value, onChange, opzioni, className = '
       </button>
       {createPortal(
         <div ref={panelRef} id={id} popover="auto" role="listbox" aria-label={ariaLabel} onKeyDown={frecce} className="scelta-panel animate-pop-in">
-          {opzioni.map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              role="option"
-              aria-selected={o.value === value}
-              className="scelta-opz no-grow"
-              onClick={() => { onChange(o.value); panelRef.current?.hidePopover(); }}
-            >
-              <span className="truncate">{o.label}</span>
-            </button>
-          ))}
+          {/* Scorre la lista, non il vetro: la barra resta dentro gli angoli */}
+          <div ref={scrollRef} className="scelta-scroll scroll-liquid">
+            {opzioni.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                role="option"
+                aria-selected={o.value === value}
+                className="scelta-opz no-grow"
+                onClick={() => { onChange(o.value); panelRef.current?.hidePopover(); }}
+              >
+                <span className="truncate">{o.label}</span>
+              </button>
+            ))}
+          </div>
+          <LiquidScrollbar target={scrollRef} />
         </div>,
         document.body,
       )}

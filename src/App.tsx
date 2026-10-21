@@ -5,6 +5,7 @@ import { Dashboard } from './components/Dashboard';
 import { SezioneMaterie } from './components/Materie';
 import { ImpostazioniModal } from './components/Profilo';
 import { GlobalFx } from './components/fx';
+import { LiquidScrollbar } from './components/LiquidScrollbar';
 import { TrendChartSkeleton } from './components/TrendChart';
 import { formatMedia, mediaGenerale, mediaPesata } from './lib/grades';
 import { useCountUp } from './lib/useCountUp';
@@ -164,6 +165,8 @@ export default function App() {
         <span />
       </div>
       <GlobalFx />
+      {/* Barra di scorrimento liquid glass della pagina, uguale in ogni schermata */}
+      <LiquidScrollbar target="pagina" />
       <StoreProvider>
         <Shell />
       </StoreProvider>
