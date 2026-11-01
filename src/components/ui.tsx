@@ -236,7 +236,7 @@ export function Onboarding() {
   const [nome, setNome] = useState('');
   const [grado, setGrado] = useState<Grado>('superiori');
   const [indirizzoId, setIndirizzoId] = useState('scientifico');
-  const [periodoTipo, setPeriodoTipo] = useState<'trimestre-penta' | 'quadrimestre'>('quadrimestre');
+  const [periodoTipo, setPeriodoTipo] = useState<'trimestre-penta' | 'quadrimestre' | 'unico'>('quadrimestre');
   const [plus, setPlus] = useState('0,25');
   const [minus, setMinus] = useState('0,25');
   const [salvataggio, setSalvataggio] = useState(false);
@@ -373,7 +373,7 @@ export function Onboarding() {
         {step === 3 && (
           <div className="space-y-5">
             <Field label="Come è diviso l'anno nella tua scuola?">
-              <Scelta value={periodoTipo} onChange={setPeriodoTipo} opzioni={[{ value: 'quadrimestre', label: 'Quadrimestre + Quadrimestre' }, { value: 'trimestre-penta', label: 'Trimestre + Pentamestre' }]} />
+              <Scelta value={periodoTipo} onChange={setPeriodoTipo} opzioni={[{ value: 'quadrimestre', label: 'Quadrimestre + Quadrimestre' }, { value: 'trimestre-penta', label: 'Trimestre + Pentamestre' }, { value: 'unico', label: 'Anno unico (senza periodi)' }]} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Quanto vale '+'?" hint="Tipico 0,25 → 6+ = 6,25">

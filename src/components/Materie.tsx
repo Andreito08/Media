@@ -5,6 +5,7 @@ import { Btn, Card, Field, Scelta, IconBook, IconChevronDown, IconEdit, IconEye,
 import type { Periodo, TipoVoto } from '../lib/db';
 
 function etichettaPeriodo(p: Periodo, tipo: string): string {
+  if (tipo === 'unico') return 'Anno unico';
   if (tipo === 'trimestre-penta') return p === 'primo' ? 'Trimestre' : 'Pentamestre';
   return p === 'primo' ? '1° Quadrimestre' : '2° Quadrimestre';
 }
@@ -33,6 +34,7 @@ export function SezioneMaterie() {
   const [peso, setPeso] = useState('100');
   const [tipo, setTipo] = useState<TipoVoto>('orale');
   const [periodo, setPeriodo] = useState<Periodo>('primo');
+  const unico = profile?.periodoTipo === 'unico';
   const [data, setData] = useState(() => new Date().toISOString().slice(0, 10));
   const [nota, setNota] = useState('');
   const [errore, setErrore] = useState('');
@@ -62,7 +64,7 @@ export function SezioneMaterie() {
       setErrore('Il peso deve stare tra 1 e 300 (100 = normale).');
       return;
     }
-    await aggiungiVoto({ materiaId, valore: r.valore, input: input.trim(), peso: p, tipo, periodo, data, nota });
+    await aggiungiVoto({ materiaId, valore: r.valore, input: input.trim(), peso: p, tipo, periodo: unico ? 'primo' : periodo, data, nota });
     setInput('');
     setNota('');
     setPeso('100');
@@ -143,7 +145,7 @@ export function SezioneMaterie() {
                     <span className="acc-chip flex h-6 w-6 items-center justify-center rounded-lg text-xs font-black">+</span>
                     Nuovo voto in {m.nome}
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className={`grid grid-cols-2 gap-2.5 ${unico ? 'sm:grid-cols-3' : 'sm:grid-cols-4'}`}>
                     <Field label="Voto">
                       <input className={inputCls} placeholder="6+ · 7,5 · 6½" value={input} onChange={(e) => setInput(soloCaratteriVoto(e.target.value))} {...numDecProps} maxLength={6} />
                       {/* il tastierino numerico non ha + − ½: si aggiungono da qui */}
@@ -158,12 +160,15 @@ export function SezioneMaterie() {
                     <Field label="Peso %" hint="100 = normale">
                       <input className={inputCls} value={peso} onChange={(e) => setPeso(soloNumeriDecimali(e.target.value))} {...numDecProps} maxLength={5} />
                     </Field>
-                    <Field label="Tipo">
-                      <Scelta value={tipo} onChange={setTipo} opzioni={(Object.keys(TIPO_META) as TipoVoto[]).map((t) => ({ value: t, label: TIPO_META[t].label }))} />
-                    </Field>
-                    <Field label="Periodo">
+                    <div className={unico ? 'col-span-2 sm:col-span-1' : ''}>
+                      <Field label="Tipo">
+                        <Scelta value={tipo} onChange={setTipo} opzioni={(Object.keys(TIPO_META) as TipoVoto[]).map((t) => ({ value: t, label: TIPO_META[t].label }))} />
+                      </Field>
+                    </div>
+                    {/* anno unico: niente scelta del periodo (sarebbe la stessa voce due volte) */}
+                    {!unico && <Field label="Periodo">
                       <Scelta value={periodo} onChange={setPeriodo} opzioni={(['primo', 'secondo'] as const).map((p) => ({ value: p, label: etichettaPeriodo(p, profile?.periodoTipo ?? 'quadrimestre') }))} />
-                    </Field>
+                    </Field>}
                   </div>
                   <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-[150px_1fr_auto]">
                     <input className={inputCls} type="date" value={data} onChange={(e) => setData(e.target.value)} />

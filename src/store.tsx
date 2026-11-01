@@ -74,11 +74,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const [p, a] = await Promise.all([db.profile.get('main'), db.anni.toArray()]);
     const m = await db.materie.toArray();
     const v = await db.voti.orderBy('data').toArray();
-    // "Anno unico" non esiste più: chi l'aveva passa ai quadrimestri
-    if (p && (p.periodoTipo as string) === 'unico') {
-      p.periodoTipo = 'quadrimestre';
-      await db.profile.put(p);
-    }
     setProfile(p ?? null);
     setAnni(a.sort((x, y) => x.label.localeCompare(y.label)));
     setMaterieTutte(m.sort((x, y) => x.createdAt - y.createdAt));

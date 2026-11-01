@@ -8,7 +8,7 @@ export interface Profile {
   grado: Grado;
   indirizzoId: string;
   indirizzoNome: string;
-  periodoTipo: 'trimestre-penta' | 'quadrimestre';
+  periodoTipo: 'trimestre-penta' | 'quadrimestre' | 'unico';
   scala: ScalaPlusMinus;
   annoAttivoId: string;
   completato: boolean;
