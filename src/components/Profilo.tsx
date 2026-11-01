@@ -107,7 +107,7 @@ function ProfiloForm() {
         )}
         <Field label="Divisione anno">
           <Scelta value={profile.periodoTipo} onChange={(periodoTipo) => aggiornaProfilo({ periodoTipo })}
-            opzioni={[{ value: 'quadrimestre', label: 'Quadrimestri' }, { value: 'trimestre-penta', label: 'Trimestre + Penta' }, { value: 'unico', label: 'Anno unico' }]} />
+            opzioni={[{ value: 'quadrimestre', label: 'Quadrimestri' }, { value: 'trimestre-penta', label: 'Trimestre + Penta' }]} />
         </Field>
         <Field label="Quanto vale '+'?" hint="Es. 0,25 → 6+ = 6,25">
           <input className={inputCls} value={plusMostrato}

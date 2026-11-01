@@ -1,8 +1,6 @@
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { createPortal } from 'react-dom';
+import { useMemo, useState } from 'react';
 import { GRADI, INDIRIZZI_SUPERIORI, materieDefaultPerIndirizzo, type Grado } from '../data/indirizzi';
 import { useStore } from '../store';
-import { LiquidScrollbar } from './LiquidScrollbar';
 
 // ---------------- Icone SVG (niente emoji, stile coerente) ----------------
 
@@ -168,25 +166,9 @@ type SceltaProps<T extends string> = {
   value: T; onChange: (v: T) => void; opzioni: { value: T; label: string }[]; className?: string; ariaLabel?: string;
 };
 
-// Touch (telefono/tablet): <select> nativa, che apre l'elenco di sistema
-// (lista Android, rotella iOS): più comodo col dito e senza lavoro in JS.
-// Con mouse (PC) resta il pannello liquid glass.
-const TOUCH_QUERY = '(pointer: coarse)';
-
-function iscrivitiTouch(fn: () => void) {
-  const mq = window.matchMedia?.(TOUCH_QUERY);
-  mq?.addEventListener('change', fn);
-  return () => mq?.removeEventListener('change', fn);
-}
-
-const leggiTouch = () => window.matchMedia?.(TOUCH_QUERY).matches ?? false;
-
-export function Scelta<T extends string>(props: SceltaProps<T>) {
-  const touch = useSyncExternalStore(iscrivitiTouch, leggiTouch);
-  return touch ? <SceltaNativa {...props} /> : <SceltaVetro {...props} />;
-}
-
-function SceltaNativa<T extends string>({ value, onChange, opzioni, className = '', ariaLabel }: SceltaProps<T>) {
+// Sempre la <select> nativa: apre il menù di sistema (lista Android,
+// rotella iOS, menù del sistema operativo su PC).
+export function Scelta<T extends string>({ value, onChange, opzioni, className = '', ariaLabel }: SceltaProps<T>) {
   return (
     <select
       value={value}
@@ -198,121 +180,6 @@ function SceltaNativa<T extends string>({ value, onChange, opzioni, className = 
         <option key={o.value} value={o.value}>{o.label}</option>
       ))}
     </select>
-  );
-}
-
-/**
- * Tendina liquid glass per PC, uguale su ogni browser.
- * Popover nativo: sta sopra tutto, si chiude con Esc o toccando fuori,
- * e il focus torna al bottone. Il pannello è in un portal per non finire
- * dentro <label> o card con overflow nascosto.
- */
-/** Pannello sotto il bottone (o sopra, se manca spazio). Falso se il bottone è fuori schermo. */
-function posiziona(btn: HTMLElement | null, panel: HTMLElement | null): boolean {
-  if (!btn || !panel) return false;
-  const r = btn.getBoundingClientRect();
-  if (r.bottom < 0 || r.top > innerHeight) return false;
-  const sotto = innerHeight - r.bottom - 12;
-  const sopra = r.top - 12;
-  const giu = sotto >= 240 || sotto >= sopra;
-  const larg = Math.max(r.width, 176);
-  Object.assign(panel.style, {
-    left: `${Math.max(8, Math.min(r.left, innerWidth - larg - 8))}px`,
-    width: `${larg}px`,
-    top: giu ? `${r.bottom + 6}px` : 'auto',
-    bottom: giu ? 'auto' : `${innerHeight - r.top + 6}px`,
-    maxHeight: `${Math.min(320, giu ? sotto : sopra)}px`,
-  });
-  return true;
-}
-
-function SceltaVetro<T extends string>({ value, onChange, opzioni, className = '', ariaLabel }: SceltaProps<T>) {
-  const id = useId();
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [aperto, setAperto] = useState(false);
-  const corrente = opzioni.find((o) => o.value === value);
-
-
-  useEffect(() => {
-    const panel = panelRef.current;
-    if (!panel) return;
-    const prima = (e: Event) => { if ((e as ToggleEvent).newState === 'open') posiziona(btnRef.current, panel); };
-    const dopo = (e: Event) => {
-      const open = (e as ToggleEvent).newState === 'open';
-      setAperto(open);
-      if (open) (panel.querySelector<HTMLElement>('[aria-selected="true"]') ?? panel.querySelector('button'))?.focus();
-    };
-    panel.addEventListener('beforetoggle', prima);
-    panel.addEventListener('toggle', dopo);
-    return () => {
-      panel.removeEventListener('beforetoggle', prima);
-      panel.removeEventListener('toggle', dopo);
-    };
-  }, []);
-
-  // Pagina che scorre o cambia misura (es. si chiude la tastiera): il pannello
-  // segue il bottone, e si chiude solo se il bottone esce dallo schermo.
-  useEffect(() => {
-    if (!aperto) return;
-    const segui = (e: Event) => {
-      if (e.target instanceof Node && panelRef.current?.contains(e.target)) return;
-      if (!posiziona(btnRef.current, panelRef.current)) panelRef.current?.hidePopover();
-    };
-    window.addEventListener('scroll', segui, true);
-    window.addEventListener('resize', segui);
-    return () => {
-      window.removeEventListener('scroll', segui, true);
-      window.removeEventListener('resize', segui);
-    };
-  }, [aperto]);
-
-  const frecce = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const voci = [...e.currentTarget.querySelectorAll<HTMLElement>('button')];
-    const i = voci.indexOf(document.activeElement as HTMLElement);
-    const vai = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: voci.length - 1 }[e.key];
-    if (vai === undefined) return;
-    e.preventDefault();
-    voci[(vai + voci.length) % voci.length]?.focus();
-  };
-
-  return (
-    <>
-      <button
-        ref={btnRef}
-        type="button"
-        popoverTarget={id}
-        aria-haspopup="listbox"
-        aria-expanded={aperto}
-        aria-label={ariaLabel}
-        className={`${inputCls} no-grow flex items-center justify-between gap-2 text-left ${className}`}
-      >
-        <span className="truncate">{corrente?.label ?? '—'}</span>
-        <IconChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${aperto ? 'rotate-180' : ''}`} />
-      </button>
-      {createPortal(
-        <div ref={panelRef} id={id} popover="auto" role="listbox" aria-label={ariaLabel} onKeyDown={frecce} className="scelta-panel animate-pop-in">
-          {/* Scorre la lista, non il vetro: la barra resta dentro gli angoli */}
-          <div ref={scrollRef} className="scelta-scroll scroll-liquid">
-            {opzioni.map((o) => (
-              <button
-                key={o.value}
-                type="button"
-                role="option"
-                aria-selected={o.value === value}
-                className="scelta-opz no-grow"
-                onClick={() => { onChange(o.value); panelRef.current?.hidePopover(); }}
-              >
-                <span className="truncate">{o.label}</span>
-              </button>
-            ))}
-          </div>
-          <LiquidScrollbar target={scrollRef} />
-        </div>,
-        document.body,
-      )}
-    </>
   );
 }
 
@@ -369,7 +236,7 @@ export function Onboarding() {
   const [nome, setNome] = useState('');
   const [grado, setGrado] = useState<Grado>('superiori');
   const [indirizzoId, setIndirizzoId] = useState('scientifico');
-  const [periodoTipo, setPeriodoTipo] = useState<'trimestre-penta' | 'quadrimestre' | 'unico'>('quadrimestre');
+  const [periodoTipo, setPeriodoTipo] = useState<'trimestre-penta' | 'quadrimestre'>('quadrimestre');
   const [plus, setPlus] = useState('0,25');
   const [minus, setMinus] = useState('0,25');
   const [salvataggio, setSalvataggio] = useState(false);
@@ -506,7 +373,7 @@ export function Onboarding() {
         {step === 3 && (
           <div className="space-y-5">
             <Field label="Come è diviso l'anno nella tua scuola?">
-              <Scelta value={periodoTipo} onChange={setPeriodoTipo} opzioni={[{ value: 'quadrimestre', label: 'Quadrimestre + Quadrimestre' }, { value: 'trimestre-penta', label: 'Trimestre + Pentamestre' }, { value: 'unico', label: 'Anno unico (senza periodi)' }]} />
+              <Scelta value={periodoTipo} onChange={setPeriodoTipo} opzioni={[{ value: 'quadrimestre', label: 'Quadrimestre + Quadrimestre' }, { value: 'trimestre-penta', label: 'Trimestre + Pentamestre' }]} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Quanto vale '+'?" hint="Tipico 0,25 → 6+ = 6,25">

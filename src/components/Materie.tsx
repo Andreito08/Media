@@ -5,10 +5,15 @@ import { Btn, Card, Field, Scelta, IconBook, IconChevronDown, IconEdit, IconEye,
 import type { Periodo, TipoVoto } from '../lib/db';
 
 function etichettaPeriodo(p: Periodo, tipo: string): string {
-  if (tipo === 'unico') return 'Anno unico';
   if (tipo === 'trimestre-penta') return p === 'primo' ? 'Trimestre' : 'Pentamestre';
   return p === 'primo' ? '1° Quadrimestre' : '2° Quadrimestre';
 }
+
+// Segni che il tastierino numerico non ha: sostituiscono quello già in fondo al voto.
+const SEGNI = ['+', '−', '½'] as const;
+const conSegno = (v: string, s: string) => v.trim().replace(/[+\-−½]+$/, '') + s;
+/** Cifre, virgola/punto e i segni dei voti (+ − ½ /): niente lettere. */
+const soloCaratteriVoto = (v: string) => v.replace(/[^0-9.,+\-−½/ ]/g, '');
 
 const TIPO_META: Record<TipoVoto, { label: string; cls: string }> = {
   orale: { label: 'Orale', cls: 'bg-sky-100 text-sky-700 dark:bg-sky-400/15 dark:text-sky-200' },
@@ -140,7 +145,15 @@ export function SezioneMaterie() {
                   </div>
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                     <Field label="Voto">
-                      <input className={inputCls} placeholder="6+ · 7,5 · 6½" value={input} onChange={(e) => setInput(e.target.value)} inputMode="text" />
+                      <input className={inputCls} placeholder="6+ · 7,5 · 6½" value={input} onChange={(e) => setInput(soloCaratteriVoto(e.target.value))} {...numDecProps} maxLength={6} />
+                      {/* il tastierino numerico non ha + − ½: si aggiungono da qui */}
+                      <span className="mt-1.5 flex gap-1.5">
+                        {SEGNI.map((s) => (
+                          <button key={s} type="button" aria-label={`Aggiungi ${s}`}
+                            className="press acc-chip h-7 flex-1 rounded-full text-sm font-black"
+                            onClick={() => setInput((v) => conSegno(v, s))}>{s}</button>
+                        ))}
+                      </span>
                     </Field>
                     <Field label="Peso %" hint="100 = normale">
                       <input className={inputCls} value={peso} onChange={(e) => setPeso(soloNumeriDecimali(e.target.value))} {...numDecProps} maxLength={5} />
