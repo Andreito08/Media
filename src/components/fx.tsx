@@ -131,7 +131,7 @@ export function GlobalFx() {
     const rootOf = () => document.getElementById('app-root');
 
     const panelOf = (t: EventTarget | null) =>
-      (t as HTMLElement | null)?.closest?.('.modal-scroll, .scelta-scroll') as HTMLElement | null;
+      (t as HTMLElement | null)?.closest?.('.modal-scroll') as HTMLElement | null;
 
     const metrics = (panel: HTMLElement | null) => {
       if (!panel) {
@@ -269,7 +269,7 @@ export function GlobalFx() {
     const alBordo = new WeakMap<object, 'top' | 'bottom' | null>();
     const onScrollAny = (e: Event) => {
       if (calma || tracking) return;
-      const panel = e.target instanceof HTMLElement && e.target.matches('.modal-scroll, .scelta-scroll') ? e.target : null;
+      const panel = e.target instanceof HTMLElement && e.target.matches('.modal-scroll') ? e.target : null;
       if (!panel && e.target !== document) return;
       const el = panel ?? rootOf();
       if (!el) return;
