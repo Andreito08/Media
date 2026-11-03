@@ -1,5 +1,8 @@
 # Media
 
+> [!WARNING]
+> **Beta — lavori in corso.** L'app funziona ma è ancora in sviluppo: possono esserci bug e funzioni che cambiano da una versione all'altra. Fai spesso un backup dei voti.
+
 > PWA offline-first per gestire voti, medie e grafici per ogni materia, dalla primaria all'università.
 
 **Demo live:** https://andreito08.github.io/Media/
